@@ -12,6 +12,7 @@
     import {fnapp} from './fntags.js'
     import {div, style} from './fnelements.js'
     import MenuBoard from "./MenuBoard.js";
+    import {today} from "./constants.js";
 
     document.head.append(
         style(`
@@ -21,30 +22,34 @@
                 background-repeat: no-repeat;
                 background-size: cover;
                 min-height: 100vh;
+                margin: 0;
+                font-family: radium;
             }
             @font-face {
                 font-family: 'radium';
                 src: url('radium.woff') format('woff');
             }
+            button {
+                background-color: grey;
+                border-color: black;
+                border-radius: 4px;
+                padding: 10px;
+                font-family: radium;
+            }
         `)
     )
 
+    const datePlusDays = (date, days)=>{
+
+        const d = new Date(today().getTime())
+        d.setDate(d.getDate()+days)
+
+        return d.toLocaleDateString('sv')
+    }
+
     const dinnerPlans = [
         {
-            date: "2020-02-29",
-            dishes: [
-                {
-                    name: "Eat Out",
-                    recipe: null,
-                    recipeUrl: null,
-                    imageUrl: null,
-                    cookTime: 0,
-                    prepSteps: []
-                }
-            ],
-        },
-        {
-            date: "2020-03-01",
+            date:  datePlusDays(today(), 0),
             dishes: [
                 {
                     name: "Marinated Flank Steak",
@@ -56,12 +61,12 @@
                         {
                             leadTime: (24 * 60) * 2,
                             duration: 5,
-                            step: "Put steak in fridge to defrost"
+                            description: "Put steak in fridge to defrost"
                         },
                         {
                             leadTime: 240,  //in minutes
                             duration: 15,
-                            step: "Marinate Steak"
+                            description: "Marinate Steak"
                         }
                     ]
                 },
@@ -101,7 +106,20 @@
             ],
         },
         {
-            date: "2020-03-02",
+            date: datePlusDays(today(), 1),
+            dishes: [
+                {
+                    name: "Eat Out",
+                    recipe: null,
+                    recipeUrl: null,
+                    imageUrl: null,
+                    cookTime: 0,
+                    prepSteps: []
+                }
+            ],
+        },
+        {
+            date: datePlusDays(today(), 2),
             dishes: [
                 {
                     name: "Spaghetti",
@@ -114,7 +132,7 @@
             ],
         },
         {
-            date: "2020-03-02",
+            date: datePlusDays(today(), 3),
             dishes: [
                 {
                     name: "Bowl of Jellybeans",
@@ -137,9 +155,9 @@
                     'align-items': 'center',
                     padding: '10px',
                     display: 'flex',
-                    'font-family': 'radium',
-                    'font-size': '5.5vh',
                     'flex-direction': 'column',
+                    'max-width': '650px',
+                    'text-align': 'center'
                 }
             },
             MenuBoard(dinnerPlans)
