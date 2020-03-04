@@ -19,15 +19,14 @@ const modal = (...children) => {
                 position: 'fixed',
                 top: 0,
                 left: 0,
-                'background-image': 'url(./chalkboardBackground.jpg)',
+                'background-color': '#151515eb',
                 'background-position': 'center',
-                'background-repeat': 'no-repeat',
                 'background-size': 'cover',
             }
         },
         section({
                 style: {
-                    width: '100%',
+                    width: '92%',
                     'max-width': '650px',
                     margin: 'auto',
                     'text-align': 'center',

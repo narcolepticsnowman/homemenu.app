@@ -32,5 +32,5 @@ export const humanTime = (minutes) => {
     const mins = minutes - hours * 60
     let str = ''
     if (hours > 0) str = `${hours} ${plural(hours, "Hour")} `
-    return str + `${mins} Min`
+    return str + (mins > 0 ? `${mins} Min` : '')
 }

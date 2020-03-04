@@ -1,6 +1,6 @@
 import {a, div, hr, img, section, span} from "./fnelements.js";
 import DishView from "./DishView.js";
-import {colors, humanTime, isoDateToLocaleDate, toMonthDay, today} from "./constants.js";
+import {colors, humanTime, isoDateToLocaleDate, today, toMonthDay} from "./constants.js";
 
 const dishViewModal = (dish) => {
     let modal = DishView(dish)
@@ -29,10 +29,13 @@ const todayMenuItem = (plan) => {
             div({
                     style: {
                         color: colors.orange,
-                        'font-size': '6.5vh'
+                        'font-size': '6.5vh',
+                        'align-items': 'center',
+                        'flex-direction': 'column',
+                        'display': 'flex'
                     }
                 },
-                i > 0 ? hr({style: {color: colors.offWhite, margin: '4px'}}) : '',
+                i > 0 ? hr({style: {color: colors.offWhite, margin: '4px', width: '60%'}}) : '',
                 dishViewModal(dish)
             )
         ),
