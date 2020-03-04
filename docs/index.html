@@ -6,13 +6,35 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-app.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-firestore.js"></script>
+    <script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css"/>
+    <script type="text/javascript">
+        const firebaseConfig = {
+            apiKey: "AIzaSyDmaQbkeo-pYMRbV2jiealTpjMTpTPH2kk",
+            authDomain: "dinner-at-home.firebaseapp.com",
+            databaseURL: "https://dinner-at-home.firebaseio.com",
+            projectId: "dinner-at-home",
+            storageBucket: "dinner-at-home.appspot.com",
+            messagingSenderId: "601450421542",
+            appId: "1:601450421542:web:12f21f11c9bbbfe5c135e7",
+            measurementId: "G-FC4WQX18R8"
+        }
+        firebase.initializeApp(firebaseConfig);
+
+    </script>
 </head>
 <body>
 <script type="module">
-    import {fnapp} from './fntags.js'
+    import {fnapp, fnbind, fnstate} from './fntags.js'
     import {div, style} from './fnelements.js'
     import MenuBoard from "./MenuBoard.js";
     import {today} from "./constants.js";
+
+    const firebaseUser = fnstate({current: {}})
 
     document.head.append(
         style(`
@@ -37,115 +59,8 @@
         `)
     )
 
-    const datePlusDays = (date, days)=>{
-
-        const d = new Date(today().getTime())
-        d.setDate(d.getDate()+days)
-
-        return d.toLocaleDateString('sv')
-    }
-
-    const dinnerPlans = [
-        {
-            date:  datePlusDays(today(), 0),
-            dishes: [
-                {
-                    name: "Marinated Flank Steak",
-                    recipe: null,
-                    recipeUrl: "http://allrecipes.com",
-                    imageUrl: null,
-                    cookTime: 20,
-                    prepSteps: [
-                        {
-                            leadTime: (24 * 60) * 2,
-                            duration: 5,
-                            description: "Put steak in fridge to defrost"
-                        },
-                        {
-                            leadTime: 240,  //in minutes
-                            duration: 15,
-                            description: "Marinate Steak"
-                        }
-                    ]
-                },
-                {
-                    name: "Roasted Cauliflower",
-                    cookTime: 20,
-                    recipe: {
-                        ingredients: [
-                            {
-                                amount: "1 whole",
-                                name: "Cauliflower"
-                            },
-                            {
-                                amount: "1 tsp",
-                                name: "Salt"
-                            },
-                            {
-                                amount: "1 tbsp",
-                                name: "Garlic"
-                            },
-                            {
-                                amount: "4 tbsp",
-                                name: "olive oil"
-                            }
-                        ],
-                        steps: [
-                            "remove green bottom of cauliflower",
-                            "place in pan",
-                            "Top with olive oil, salt and garlic",
-                            "bake for 1 hr"
-                        ]
-                    },
-                    recipeUrl: null,
-                    imageUrl: null,
-                    prepSteps: []
-                }
-            ],
-        },
-        {
-            date: datePlusDays(today(), 1),
-            dishes: [
-                {
-                    name: "Eat Out",
-                    recipe: null,
-                    recipeUrl: null,
-                    imageUrl: null,
-                    cookTime: 0,
-                    prepSteps: []
-                }
-            ],
-        },
-        {
-            date: datePlusDays(today(), 2),
-            dishes: [
-                {
-                    name: "Spaghetti",
-                    recipe: null,
-                    recipeUrl: "http://allrecipes.com",
-                    imageUrl: null,
-                    cookTime: 15,
-                    prepSteps: []
-                }
-            ],
-        },
-        {
-            date: datePlusDays(today(), 3),
-            dishes: [
-                {
-                    name: "Bowl of Jellybeans",
-                    recipe: null,
-                    recipeUrl: "http://allrecipes.com",
-                    imageUrl: null,
-                    cookTime: 15,
-                    prepSteps: []
-                }
-            ],
-        }
-    ]
-
     fnapp(document.body,
-        div(
+        fnbind(firebaseUser, ()=> firebaseUser.current ? div(
             {
                 style: {
                     margin: 'auto',
@@ -157,9 +72,25 @@
                     'text-align': 'center'
                 }
             },
-            MenuBoard(dinnerPlans)
+            MenuBoard()
+            ) : ''
         )
     )
+
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            firebaseUser.current = user
+        } else {
+            firebase.auth().getRedirectResult().then(function (result) {
+                firebaseUser.current = result.user
+                if (!firebaseUser.current) {
+                    let provider = new firebase.auth.GoogleAuthProvider();
+                    firebase.auth().signInWithRedirect(provider);
+                }
+            }).catch(console.error);
+        }
+    });
+
 </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 import {a, div, hr, img, section, span} from "./fnelements.js";
 import DishView from "./DishView.js";
 import {colors, humanTime, isoDateToLocaleDate, today, toMonthDay} from "./constants.js";
-
+import {dinnerPlans} from "./dinnerPlans.js";
 const dishViewModal = (dish) => {
     let modal = DishView(dish)
     return a({
@@ -89,11 +89,11 @@ const menuItem = (plan) => {
 
 }
 
-export default (dinnerPlans) => section(
+export default () => section(
     {
         style: {
             width: '100%'
         }
     },
-    dinnerPlans.map(menuItem)
+    dinnerPlans.list.map(menuItem)
 )
