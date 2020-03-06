@@ -14,9 +14,7 @@ export const toMonthDay = (isoDate) => [isoDateToLocaleDate(isoDate)]
         `${(date.getMonth() + 1)}/${date.getDate().toString().padStart(2, "0")
         }`)[0]
 
-export const isoDateToLocaleDate = (date) => new Date(Date.parse(date) + new Date().getTimezoneOffset() * 60000)
-
-
+export const isoDateToLocaleDate = (date) => new Date(date)
 
 export const today = ()=>{
     let tdy = new Date()
@@ -24,6 +22,11 @@ export const today = ()=>{
     return tdy
 }
 
+export const datePlusDays = (date, days) => {
+    const d = new Date(date)
+    d.setDate(d.getDate() + days)
+    return d.getTime()
+}
 
 export const plural = (n, unit) => n > 1 ? unit + 's' : unit
 

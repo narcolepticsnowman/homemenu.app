@@ -1,7 +1,10 @@
-import {a, div, hr, img, section, span} from "./fnelements.js";
+import {a, button, div, hr, img, section, span} from "./fnelements.js";
 import DishView from "./DishView.js";
 import {colors, humanTime, isoDateToLocaleDate, today, toMonthDay} from "./constants.js";
 import {dinnerPlans} from "./dinnerPlans.js";
+import dishes from "./dishes.js";
+import AddPlanModal from "./AddPlanModal.js";
+
 const dishViewModal = (dish) => {
     let modal = DishView(dish)
     return a({
@@ -15,7 +18,7 @@ const dishViewModal = (dish) => {
 }
 
 const todayMenuItem = (plan) => {
-    let cookTime = plan.dishes.map(d => d.cookTime).reduce((a, b) => a + b, 0)
+    let cookTime = plan.dishIds.map(id=>dishes[id]||{}).map(d => d.cookTime||0).reduce((a, b) => a + b, 0)
     return div({style: {}},
         div({
             style: {
@@ -25,10 +28,11 @@ const todayMenuItem = (plan) => {
             }
         }, toMonthDay(plan.date)),
         img({src: "./border.svg", style: {width: '75%'}}),
-        ...plan.dishes.map((dish, i) =>
+        ...plan.dishIds.map(id=>dishes[id]||{}).map((dish, i) =>
             div({
                     style: {
                         color: colors.orange,
+                        cursor: 'pointer',
                         'font-size': '6.5vh',
                         'align-items': 'center',
                         'flex-direction': 'column',
@@ -69,10 +73,11 @@ const upcomingMenuItem = (plan) => {
                 'font-size': '5.5vh'
             }
         }, toMonthDay(plan.date)),
-        ...plan.dishes.map(dish =>
+        ...plan.dishIds.map(id=>dishes[id]).map(dish =>
             div({
                     style: {
                         color: colors.darkGrey,
+                        cursor: 'pointer',
                         'font-size': '4vh'
                     }
                 },
@@ -95,5 +100,6 @@ export default () => section(
             width: '100%'
         }
     },
-    dinnerPlans.list.map(menuItem)
+    dinnerPlans.list.map(menuItem),
+    button({onclick: ()=>AddPlanModal.open(), tooltip: "Add Meal Plan"}, '+')
 )

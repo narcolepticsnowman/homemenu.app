@@ -12,29 +12,31 @@
     <script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-firestore.js"></script>
     <script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
     <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css"/>
-    <script type="text/javascript">
-        const firebaseConfig = {
-            apiKey: "AIzaSyDmaQbkeo-pYMRbV2jiealTpjMTpTPH2kk",
-            authDomain: "dinner-at-home.firebaseapp.com",
-            databaseURL: "https://dinner-at-home.firebaseio.com",
-            projectId: "dinner-at-home",
-            storageBucket: "dinner-at-home.appspot.com",
-            messagingSenderId: "601450421542",
-            appId: "1:601450421542:web:12f21f11c9bbbfe5c135e7",
-            measurementId: "G-FC4WQX18R8"
-        }
-        firebase.initializeApp(firebaseConfig);
-
-    </script>
 </head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/css/autoComplete.min.css">
+<script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/js/autoComplete.min.js"></script>
+
 <body>
 <script type="module">
     import {fnapp, fnbind, fnstate} from './fntags.js'
-    import {div, style} from './fnelements.js'
+    import {div, img, style} from './fnelements.js'
     import MenuBoard from "./MenuBoard.js";
-    import {today} from "./constants.js";
+    import {authState, initFirebase, login} from "./firebase.js";
+    import {colors} from "./constants.js";
+    import settings from "./settings.js";
 
-    const firebaseUser = fnstate({current: {}})
+    const centeredBlock = (...children) => div(
+        {
+            style: {
+                display: 'flex',
+                'flex-direction': 'column',
+                'align-items': 'center',
+                height: '50vh',
+                'justify-content': 'center'
+            }
+        },
+        ...children
+    )
 
     document.head.append(
         style(`
@@ -60,36 +62,35 @@
     )
 
     fnapp(document.body,
-        fnbind(firebaseUser, ()=> firebaseUser.current ? div(
-            {
-                style: {
-                    margin: 'auto',
-                    'align-items': 'center',
-                    padding: '10px',
-                    display: 'flex',
-                    'flex-direction': 'column',
-                    'max-width': '650px',
-                    'text-align': 'center'
-                }
-            },
-            MenuBoard()
-            ) : ''
+        fnbind(authState, () =>
+            authState.isLoaded ?
+                authState.isAuthenticated ?
+                    div(
+                        {
+                            style: {
+                                margin: 'auto',
+                                'align-items': 'center',
+                                padding: '10px',
+                                display: 'flex',
+                                'flex-direction': 'column',
+                                'max-width': '650px',
+                                'text-align': 'center'
+                            }
+                        },
+                        MenuBoard(),
+                        settings
+                    )
+                    :
+                    centeredBlock(
+                        div({style: {'font-size': '4vh', color: colors.orange}}, "Menu Board"),
+                        img({src: "./google_sign_in_btn.png", style: {cursor: 'pointer'}, onclick: ()=>login()})
+                    )
+                :
+                centeredBlock(div({style: {'font-size': '4vh', color: colors.blue}}, "Loading..."))
         )
     )
 
-    firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-            firebaseUser.current = user
-        } else {
-            firebase.auth().getRedirectResult().then(function (result) {
-                firebaseUser.current = result.user
-                if (!firebaseUser.current) {
-                    let provider = new firebase.auth.GoogleAuthProvider();
-                    firebase.auth().signInWithRedirect(provider);
-                }
-            }).catch(console.error);
-        }
-    });
+    initFirebase()
 
 </script>
 </body>
