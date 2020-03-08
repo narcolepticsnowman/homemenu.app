@@ -40,11 +40,11 @@ export default {
         return await this.findFiles(name, parent, 'application/vnd.google-apps.folder')
     },
     async findFiles(name, folderId = null, mimeType = null) {
-        return await driveApi.files.list({
-            q: `name='${name}${folderId ? ` and '${folderId}' in parents` : ""}${mimeType ? ` and mimeType='${mimeType}'` : ''}'`,
+        return (await driveApi.files.list({
+            q: `name='${name}'${folderId ? ` and '${folderId}' in parents` : ""}${mimeType ? ` and mimeType='${mimeType}'` : ''}`,
             fields: 'files(id, name)',
             spaces: 'drive'
-        })
+        })).result.files
     },
     async getShareLink(fileId) {
         const permissions = await driveApi.permissions.list({})
