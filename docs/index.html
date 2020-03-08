@@ -6,24 +6,20 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-app.js"></script>
 
-    <script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.9.3/firebase-firestore.js"></script>
-    <script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
-    <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css"/>
 </head>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/css/autoComplete.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@7.2.0/dist/js/autoComplete.min.js"></script>
 
 <body>
 <script type="module">
-    import {fnapp, fnbind, fnstate} from './fntags.js'
+    import {fnapp, fnbind} from './fntags.js'
     import {div, img, style} from './fnelements.js'
     import MenuBoard from "./MenuBoard.js";
-    import {authState, initFirebase, login} from "./firebase.js";
     import {colors} from "./constants.js";
     import settings from "./settings.js";
+    import {authState, init, login} from "./gooooogle_sign-in.js";
+    import {loadData, datastoreState} from "./datastore.js";
+    import drive from "./drive.js";
+
 
     const centeredBlock = (...children) => div(
         {
@@ -61,6 +57,7 @@
         `)
     )
 
+    let loading = centeredBlock(div({style: {'font-size': '4vh', color: colors.blue}}, "Loading..."));
     fnapp(document.body,
         fnbind(authState, () =>
             authState.isLoaded ?
@@ -77,21 +74,23 @@
                                 'text-align': 'center'
                             }
                         },
-                        MenuBoard(),
+                        fnbind(datastoreState, () => datastoreState.loaded ? MenuBoard() : loading),
                         settings
                     )
                     :
                     centeredBlock(
                         div({style: {'font-size': '4vh', color: colors.orange}}, "Menu Board"),
-                        img({src: "./google_sign_in_btn.png", style: {cursor: 'pointer'}, onclick: ()=>login()})
+                        img({src: "./google_sign_in_btn.png", style: {cursor: 'pointer'}, onclick: () => login()})
                     )
                 :
-                centeredBlock(div({style: {'font-size': '4vh', color: colors.blue}}, "Loading..."))
+
+                loading
         )
     )
 
-    initFirebase()
-
+    drive.init('601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com', "AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY")
+        .then(init)
+        .then(loadData)
 </script>
 </body>
 </html>

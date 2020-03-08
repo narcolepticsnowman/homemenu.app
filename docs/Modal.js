@@ -1,9 +1,7 @@
 import {button, div, header, section} from "./fnelements.js";
-import {getAttrs} from "./fntags.js";
 
-const modal = (...children) => {
+export default ({content, onmounted, onclosed}) => {
 
-    const attrs = getAttrs(children)
 
     let close = button({
             style: {
@@ -15,9 +13,12 @@ const modal = (...children) => {
         }
         , "X"
     )
-    const contentDiv = (children) => div(...(Array.isArray(children) ? children : [children]))
+    const getContent = () => {
+        let children = typeof content === 'function' ? content() : content
+        return div(...(Array.isArray(children) ? children : [children]))
+    }
 
-    let currentContent = contentDiv(children);
+    let currentContent = getContent()
     let m = div(
         {
             style: {
@@ -46,19 +47,21 @@ const modal = (...children) => {
     )
     const res = {
         open: () => {
-            if (typeof attrs.content === 'function') {
-                let content = attrs.content()
-                currentContent.replaceWith(contentDiv(content))
+            if (typeof content === 'function') {
+                currentContent.replaceWith(getContent())
             }
             document.body.append(m)
-            if (attrs.onmounted && typeof attrs.onmounted === 'function') {
-                setTimeout(attrs.onmounted, 1)
+            if (onmounted && typeof onmounted === 'function') {
+                setTimeout(onmounted, 1)
             }
         },
-        close: () => m.remove()
+        close: () => {
+            if (onclosed && typeof onclosed === 'function') {
+                setTimeout(onclosed, 1)
+            }
+            m.remove()
+        }
     }
     close.onclick = () => res.close()
     return res
 }
-
-export default (...children) => modal(...children)

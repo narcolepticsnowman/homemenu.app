@@ -2,15 +2,16 @@ import Modal from "./Modal.js";
 import {button, div, form, input} from "./fnelements.js";
 import {fnbind, fnstate} from "./fntags.js";
 import {datePlusDays} from "./constants.js";
-import {dinnerPlans} from "./dinnerPlans.js";
+import {getMenuPlans} from './datastore.js'
 import dishes from "./dishes.js";
+import autocomplete from "./autocomplete.js";
 
 function daysInMonth(month, year) {
     return new Date(year, month, 0).getDate();
 }
 
 const monthDayPicker = (onChange) => {
-    let maxPlanDate = dinnerPlans.list.map(plan => plan.date).reduce((last, curr) => last > curr ? last : curr, 0);
+    let maxPlanDate = getMenuPlans().map(plan => plan.date).reduce((last, curr) => last > curr ? last : curr, 0);
     const nextPlanDate = new Date(datePlusDays(maxPlanDate, 1))
     let day = nextPlanDate.getDate()
     const monthState = fnstate({month: nextPlanDate.getMonth() + 1})
@@ -45,50 +46,41 @@ const monthDayPicker = (onChange) => {
     )
 }
 
+const emptyPlan = () => ({
+    date: 0,
+    dishIds: []
+})
+
+let currentPlan = emptyPlan()
 
 export default Modal({
+        onClosed: () => currentPlan = emptyPlan(),
         onmounted: () => {
-            new autoComplete({
-                data: {
-                    src: Object.values(dishes),
-                    key: ["name"],
-                    cache: false
-                },
-                sort: (a, b) => {
-                    if (a.match < b.match) return -1;
-                    if (a.match > b.match) return 1;
-                    return 0;
-                },
-                placeHolder: "Search Dishes",
-                selector: "#dishNameInput",
-                maxResults: 5,
-            });
+
         },
-        content: () => {
-            const dinnerPlan = {
-                date: 0,
-                dishIds: []
-            }
+        content: () => div(
+            form(
+                {
+                    onsubmit: () => {
 
-
-            return div(
-                form(
-                    {
-                        onsubmit: () => {
-
-                        }
-                    },
-                    div(
-                        monthDayPicker((selectedDate) => dinnerPlan.date = selectedDate.getTime()),
-                        div("Add Dish: ", input({
-                                id: 'dishNameInput',
-                                type: 'text'
-                            })
-                        ),
-                        button({type: 'submit'}, 'Save')
-                    )
+                    }
+                },
+                div(
+                    monthDayPicker((selectedDate) => currentPlan.date = selectedDate.getTime()),
+                    div("Add Dish: ", input({
+                            id: 'dishNameInput',
+                            type: 'text'
+                        })
+                    ),
+                    button({type: 'submit'}, 'Save'),
+                    autocomplete({
+                        data: dishes,
+                        displayProperty: "name",
+                        stringMappers: [(dish) => dish.name, (dish) => dish.recipeUrl]
+                    }),
                 )
             )
-        }
+        )
+
     }
 )

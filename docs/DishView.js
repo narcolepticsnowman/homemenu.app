@@ -31,7 +31,7 @@ const prepSteps = (steps) => div(
                     'align-items': 'center'
                 }
             },
-            i>0 ? hr({style: {color: colors.offWhite, width: '60%'}}) : '',
+            i > 0 ? hr({style: {color: colors.offWhite, width: '60%'}}) : '',
             div({
                 style: {
                     'font-size': '4vh',
@@ -66,50 +66,53 @@ const prepSteps = (steps) => div(
 
 
 export default (dish) => Modal(
-    div({
-            style: {
-                'font-size': '6vh',
-                color: colors.orange,
-                'margin-bottom':'5px'
-            }
-        },
-        dish.name,
-    ),
-    dish.cookTime > 0 ? div(
-        {
-            style: {
-                'text-align': 'center',
-                'font-size': '3vh',
-                'margin-bottom':'5px'
-            }
-        },
-        span({
-            style: {
-                color: colors.blue
-            }
-        }, "Cook Time: "), span({
-            style: {
-                color: colors.green
-            }
-        }, humanTime(dish.cookTime))
-    ) : "",
-    dish.recipeUrl ?
-        div({
+    {
+        content: [ div({
                 style: {
-                    'font-size': '4vh',
-                    color: colors.blue,
-                    'margin-bottom':'20px'
+                    'font-size': '6vh',
+                    color: colors.orange,
+                    'margin-bottom': '5px'
                 }
             },
-            "Recipe: ", a({
-                target: '_blank',
-                style: {
-                    color: colors.green
+            dish.name,
+        ),
+            dish.cookTime > 0 ? div(
+                {
+                    style: {
+                        'text-align': 'center',
+                        'font-size': '3vh',
+                        'margin-bottom': '5px'
+                    }
                 },
-                href: dish.recipeUrl,
-                title: dish.recipeUrl
-            }, dish.recipeUrl.split("//")[1].substr(0, 20), "..."))
-        : '',
-    hr({style: {color: colors.offWhite, margin: '8px'}}),
-    dish.prepSteps && dish.prepSteps.length > 0 ? prepSteps(dish.prepSteps) : ''
+                span({
+                    style: {
+                        color: colors.blue
+                    }
+                }, "Cook Time: "), span({
+                    style: {
+                        color: colors.green
+                    }
+                }, humanTime(dish.cookTime))
+            ) : "",
+            dish.recipeUrl ?
+                div({
+                        style: {
+                            'font-size': '4vh',
+                            color: colors.blue,
+                            'margin-bottom': '20px'
+                        }
+                    },
+                    "Recipe: ", a({
+                        target: '_blank',
+                        style: {
+                            color: colors.green
+                        },
+                        href: dish.recipeUrl,
+                        title: dish.recipeUrl
+                    }, dish.recipeUrl.split("//")[1].substr(0, 20), "..."))
+                : '',
+            hr({style: {color: colors.offWhite, margin: '8px'}}),
+            dish.prepSteps && dish.prepSteps.length > 0 ? prepSteps(dish.prepSteps) : ''
+        ]
+    }
 )

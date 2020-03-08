@@ -1,7 +1,7 @@
 import {a, button, div, hr, img, section, span} from "./fnelements.js";
 import DishView from "./DishView.js";
 import {colors, humanTime, isoDateToLocaleDate, today, toMonthDay} from "./constants.js";
-import {dinnerPlans} from "./dinnerPlans.js";
+import {getMenuPlans} from "./datastore.js";
 import dishes from "./dishes.js";
 import AddPlanModal from "./AddPlanModal.js";
 
@@ -18,7 +18,7 @@ const dishViewModal = (dish) => {
 }
 
 const todayMenuItem = (plan) => {
-    let cookTime = plan.dishIds.map(id=>dishes[id]||{}).map(d => d.cookTime||0).reduce((a, b) => a + b, 0)
+    let cookTime = plan.dishIds.map(id => dishes[id] || {}).map(d => d.cookTime || 0).reduce((a, b) => a + b, 0)
     return div({style: {}},
         div({
             style: {
@@ -28,7 +28,7 @@ const todayMenuItem = (plan) => {
             }
         }, toMonthDay(plan.date)),
         img({src: "./border.svg", style: {width: '75%'}}),
-        ...plan.dishIds.map(id=>dishes[id]||{}).map((dish, i) =>
+        ...plan.dishIds.map(id => dishes[id] || {}).map((dish, i) =>
             div({
                     style: {
                         color: colors.orange,
@@ -73,7 +73,7 @@ const upcomingMenuItem = (plan) => {
                 'font-size': '5.5vh'
             }
         }, toMonthDay(plan.date)),
-        ...plan.dishIds.map(id=>dishes[id]).map(dish =>
+        ...plan.dishIds.map(id => dishes[id]).map(dish =>
             div({
                     style: {
                         color: colors.darkGrey,
@@ -94,12 +94,12 @@ const menuItem = (plan) => {
 
 }
 
-export default () => section(
+export default async () => section(
     {
         style: {
             width: '100%'
         }
     },
-    dinnerPlans.list.map(menuItem),
-    button({onclick: ()=>AddPlanModal.open(), tooltip: "Add Meal Plan"}, '+')
+    await getMenuPlans().map(menuItem),
+    button({onclick: () => AddPlanModal.open(), tooltip: "Add Meal Plan"}, '+')
 )
