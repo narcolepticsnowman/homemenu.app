@@ -31,20 +31,22 @@ export default {
             'mimeType': 'application/vnd.google-apps.folder'
         };
         if (parent) fileMetadata.parents = [parent]
-        return await driveApi.files.create({
+        let response = await driveApi.files.create({
             resource: fileMetadata,
             fields: 'id'
-        })
+        });
+        return response.result
     },
     async findFolders(name, parent = null) {
         return await this.findFiles(name, parent, 'application/vnd.google-apps.folder')
     },
     async findFiles(name, folderId = null, mimeType = null) {
-        return (await driveApi.files.list({
+        let files = await driveApi.files.list({
             q: `name='${name}'${folderId ? ` and '${folderId}' in parents` : ""}${mimeType ? ` and mimeType='${mimeType}'` : ''}`,
             fields: 'files(id, name)',
             spaces: 'drive'
-        })).result.files
+        });
+        return files.result.files
     },
     async getShareLink(fileId) {
         const permissions = await driveApi.permissions.list({})
@@ -60,17 +62,25 @@ export default {
 
         return await this.getFile(fileId)
     },
+    async loadJson(name, folderId = null) {
+        let found = await this.findFiles(name, folderId, 'application/json')
+        let obj = null
+        if(found[0] && found[0].id){
+            let content = await this.getFileContent(found[0].id)
+            obj = JSON.parse(content)
+
+        }
+        return obj
+    },
     async save(name, object, folderId = null) {
 
         const boundary = '-------314159265358979323846';
         const delimiter = "\r\n--" + boundary + "\r\n";
         const close_delim = "\r\n--" + boundary + "--";
 
-        const contentType = 'application/json';
-
         const metadata = {
             'name': name,
-            'mimeType': contentType
+            'mimeType': 'application/json'
         };
         if (folderId) metadata.parents = [folderId]
 
@@ -79,7 +89,7 @@ export default {
             'Content-Type: application/json\r\n\r\n' +
             JSON.stringify(metadata) +
             delimiter +
-            'Content-Type: ' + contentType + '\r\n\r\n' +
+            'Content-Type: application/json\r\n\r\n' +
             JSON.stringify(object) +
             close_delim;
 
@@ -92,7 +102,7 @@ export default {
             },
             'body': multipartRequestBody
         });
-        await request.execute(callback);
+        await request.execute();
 
     },
     init(clientId, apiKey) {
@@ -120,7 +130,7 @@ const handleLoaded = (clientId, apiKey) => new Promise(resolve => gapi.load('cli
     apiKey: apiKey,
     clientId: clientId,
     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-    scope: "https://www.googleapis.com/auth/drive"
+    scope: "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly"
 }).then((res) => {
     driveApi = gapi.client.drive
     readyState.ready = true

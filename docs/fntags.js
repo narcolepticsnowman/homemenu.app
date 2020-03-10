@@ -386,6 +386,9 @@ export const h = ( tag, ...children ) => {
                         element.addEventListener( a.substring( 2 ), attr )
                     } else if( typeof attr === 'string' ) {
                         element.setAttribute( a, attr )
+                    } else if( a === "value") {
+                        //value is always a an attribute because setting it as a property causes problems
+                        element.setAttribute(a, attr)
                     } else {
                         Object.defineProperty( element, a, {
                             value: attr,

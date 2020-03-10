@@ -10,9 +10,12 @@ import {colors} from "./constants.js";
  * @param style An object to override styles of the containing div
  * @returns {HTMLDivElement}
  */
-export default ({data, displayProperty, stringMappers, style, resultClickHandler}) => {
+export default ({data, displayProperty, stringMappers, style, resultClickHandler, placeholder, onchange}) => {
     const search = fnstate({current: ""})
-    const updateSearch = (e) => search.current = e.target.value.toLowerCase()
+    const updateSearch = (e) => {
+        onchange(e)
+        search.current = e.target.value.toLowerCase()
+    }
 
     const d = Array.isArray(data) ? data : Object.values(data)
 
@@ -65,6 +68,7 @@ export default ({data, displayProperty, stringMappers, style, resultClickHandler
         },
         input({
             type: 'text', style: {
+                placeholder,
                 height: '4vh',
                 'font-size': '3vh',
                 width: '32vw',
