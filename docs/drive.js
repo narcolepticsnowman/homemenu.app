@@ -7,6 +7,12 @@ let driveApi
 
 let initialized = false
 
+//TODO this only works when name is included
+const textContains = (search) =>search ? ` and fullText contains '${search}'` : ''
+const parentIs = (folderId) =>folderId ? ` and '${folderId}' in parents` : ''
+const mimeTypeIs = (mimeType) => mimeType ? ` and mimeType='${mimeType}'` : ''
+const nameIs = (name) => name ? `name='${name}'` : ''
+
 export default {
     async getFile(fileId) {
         return await driveApi.files.get({
@@ -40,9 +46,9 @@ export default {
     async findFolders(name, parent = null) {
         return await this.findFiles(name, parent, 'application/vnd.google-apps.folder')
     },
-    async findFiles(name, folderId = null, mimeType = null) {
+    async findFiles(name, folderId = null, mimeType = null, fullText = null) {
         let files = await driveApi.files.list({
-            q: `name='${name}'${folderId ? ` and '${folderId}' in parents` : ""}${mimeType ? ` and mimeType='${mimeType}'` : ''}`,
+            q: `${nameIs(name)}${parentIs(folderId)}${mimeTypeIs(mimeType)}${textContains(fullText)}`,
             fields: 'files(id, name)',
             spaces: 'drive'
         });
@@ -63,7 +69,7 @@ export default {
         return await this.getFile(fileId)
     },
     async loadJson(name, folderId = null) {
-        let found = await this.findFiles(name, folderId, 'application/json')
+        let found = await this.findFiles(name, folderId)
         let obj = null
         if(found[0] && found[0].id){
             let content = await this.getFileContent(found[0].id)
@@ -79,9 +85,10 @@ export default {
         const close_delim = "\r\n--" + boundary + "--";
 
         const metadata = {
-            'name': name,
-            'mimeType': 'application/json'
+            'name': name.toString(),
+            'mimeType': 'text/plain'
         };
+        if(object.id) metadata.id = object.id
         if (folderId) metadata.parents = [folderId]
 
         const multipartRequestBody =
@@ -102,7 +109,7 @@ export default {
             },
             'body': multipartRequestBody
         });
-        await request.execute();
+        return new Promise((resolve)=>request.execute(resolve))
 
     },
     init(clientId, apiKey) {
@@ -130,7 +137,7 @@ const handleLoaded = (clientId, apiKey) => new Promise(resolve => gapi.load('cli
     apiKey: apiKey,
     clientId: clientId,
     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-    scope: "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.readonly"
+    scope: "https://www.googleapis.com/auth/drive"
 }).then((res) => {
     driveApi = gapi.client.drive
     readyState.ready = true

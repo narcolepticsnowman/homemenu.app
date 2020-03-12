@@ -13,12 +13,12 @@ export default ({content, onmounted, onclosed}) => {
         }
         , "X"
     )
-    const getContent = () => {
-        let children = typeof content === 'function' ? content() : content
+     function getContent(){
+        let children = typeof content === 'function' ? content(...arguments) : content
         return div(...(Array.isArray(children) ? children : [children]))
     }
 
-    let currentContent = getContent()
+    let currentContent = typeof content === 'function' ? div() : getContent()
     let m = div(
         {
             style: {
@@ -46,18 +46,18 @@ export default ({content, onmounted, onclosed}) => {
         )
     )
     const res = {
-        open: () => {
+        open(){
             if (typeof content === 'function') {
-                currentContent.replaceWith(getContent())
+                currentContent.replaceWith(getContent(...arguments))
             }
             document.body.append(m)
             if (onmounted && typeof onmounted === 'function') {
-                setTimeout(onmounted, 1)
+                onmounted()
             }
         },
-        close: () => {
+        close: async () => {
             if (onclosed && typeof onclosed === 'function') {
-                setTimeout(onclosed, 1)
+                await onclosed()
             }
             m.remove()
         }

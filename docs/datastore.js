@@ -18,7 +18,7 @@ const getFolderId = async (name, parent = null) =>
     getCachedObject(localStorage, name + "_folder-id", async () => {
         let folders = null
         try {
-            let folders =  await drive.findFolders(name, parent);
+            folders =  await drive.findFolders(name, parent);
         } catch (e) {
             if(!(e.result && e.result.error.code === 404)){
                 throw e
@@ -29,7 +29,7 @@ const getFolderId = async (name, parent = null) =>
             let folder = await drive.createFolder(name, parent)
             return folder.id
         } else {
-            folders[0].id
+            return folders[0].id
         }
     })
 
@@ -55,20 +55,14 @@ export const loadData = async () => {
         dishFolderId = await getFolderId(dishFolderName, appFolderId)
 
         const tedayyyyy = today();
-        const upcomingMenuPlans = await Promise.all([...Object.keys(new Array(5))]
+        const upcomingMenuPlans = await Promise.all([...new Array(5).keys()]
             .map(i => datePlusDays(tedayyyyy, i))
-            .map(dt => {
-                getCachedObject(sessionStorage, menuPlanKeyPrefix + dt, async ()=>{
-                    let menuPlan = await drive.loadJson(dt, menuPlanFolderId)
-                    menuPlans[menuPlan.date] = menuPlan
-                    return menuPlan
-                })
-            })
+            .map(getMenuPlanByDate)
         )
         Object.assign(menuPlans,
             upcomingMenuPlans.reduce(
                 (plans, plan) => {
-                    plans[plan.id] = plan
+                    plans[plan.date] = plan
                     return plans
                 }, {}
             )
@@ -96,14 +90,26 @@ const generateId = () => Math.random().toString(36).substring(2) + Date.now().to
 export const getMenuPlans = () =>
     Array.from(Object.values(menuPlans)).sort((a, b) => a.date > b.date ? 1 : -1)
 
+export const getMenuPlanByDate = async (msDate)=> await getCachedObject(sessionStorage, menuPlanKeyPrefix + msDate, async ()=>{
+    debugger
+    let menuPlan = await drive.loadJson(msDate, menuPlanFolderId)
+    menuPlans[msDate] = menuPlan || {date: msDate, dishIds: []}
+    return menuPlans[msDate]
+})
+
 export const saveDish = async (dish) => {
-    if (!dish.id) dish.id = generateId()
-    await drive.save(dish.id, dish, dishFolderId)
-    dishes[dish.id] = dish
+    // if (!dish.id) dish.id = generateId()
+    let savedFile = await drive.save(dish.id, dish, dishFolderId)
+    dish.id = savedFile.id
+    dishes[savedFile.id] = dish
+    sessionStorage.setItem("dish_"+dish.id, JSON.stringify(dish))
     return dish
 }
 
 export const saveMenuPlan = async (menuPlan) => {
-    await drive.save(menuPlan.date, menuPlan, menuPlanFolderId)
+    let savedFile = await drive.save(menuPlan.date, menuPlan, menuPlanFolderId)
+    menuPlan.id = savedFile.id
     menuPlans[menuPlan.date] = menuPlan
+    sessionStorage.setItem(menuPlanKeyPrefix + menuPlan.date, JSON.stringify(menuPlan))
+    return menuPlan
 }

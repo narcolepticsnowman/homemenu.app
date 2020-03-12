@@ -6,7 +6,8 @@ export const colors = {
     yellow: '#faffba',
     offWhite: "#dedede",
     lightGrey: "#a2a2a2",
-    darkGrey: '#808080'
+    darkGrey: '#808080',
+    almostBlack: '#1b1b1b'
 }
 
 export const toMonthDay = (isoDate) => [isoDateToLocaleDate(isoDate)]

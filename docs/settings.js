@@ -1,5 +1,6 @@
 import {div, img, style} from "./fnelements.js";
 import {fnstate} from "./fntags.js";
+import {colors} from "./constants.js";
 
 const settingsState = fnstate({isOpen: false})
 
@@ -37,7 +38,7 @@ const settingsToggleButton = () => {
             style: {
                 cursor: 'pointer',
                 background: 'linear-gradient(0, black, #00000073)',
-                'box-shadow': '-1px -1px 20px 1px #0a0a0a'
+                'box-shadow': '-1px -1px 20px 1px '+colors.almostBlack
             },
             onclick: () => {
                 settingsState.isOpen = !settingsState.isOpen

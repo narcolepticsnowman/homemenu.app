@@ -65,9 +65,9 @@ const prepSteps = (steps) => div(
 )
 
 
-export default (dish) => Modal(
+export default Modal(
     {
-        content: [ div({
+        content: (dish) => [div({
                 style: {
                     'font-size': '6vh',
                     color: colors.orange,

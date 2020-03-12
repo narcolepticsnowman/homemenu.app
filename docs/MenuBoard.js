@@ -3,30 +3,41 @@ import DishView from "./DishView.js";
 import {colors, humanTime, isoDateToLocaleDate, today, toMonthDay} from "./constants.js";
 import {getMenuPlans} from "./datastore.js";
 import dishes from "./dishes.js";
-import AddPlanModal from "./AddPlanModal.js";
+import EditMenu from "./EditMenu.js";
 
-const dishViewModal = (dish) => {
-    let modal = DishView(dish)
+const dishView = DishView
+const editMenu = EditMenu
+const dishModalLink = (dish) => {
     return a({
             onclick: (e) => {
                 e.preventDefault()
-                modal.open()
+                dishView.open(dish)
             }
         },
         dish.name
     )
 }
 
+const editButton = (planDate) => {
+    return button({
+        onclick: (e) => {
+            editMenu.open(planDate)
+        }
+    })
+}
+
 const todayMenuItem = (plan) => {
     let cookTime = plan.dishIds.map(id => dishes[id] || {}).map(d => d.cookTime || 0).reduce((a, b) => a + b, 0)
     return div({style: {}},
         div({
-            style: {
-                color: colors.red,
-                'text-align': 'center',
-                'font-size': '8.5vh'
-            }
-        }, toMonthDay(plan.date)),
+                style: {
+                    color: colors.red,
+                    'text-align': 'center',
+                    'font-size': '8.5vh'
+                }
+            }, toMonthDay(plan.date),
+            editButton(plan.date)
+        ),
         img({src: "./border.svg", style: {width: '75%'}}),
         ...plan.dishIds.map(id => dishes[id] || {}).map((dish, i) =>
             div({
@@ -40,7 +51,7 @@ const todayMenuItem = (plan) => {
                     }
                 },
                 i > 0 ? hr({style: {color: colors.offWhite, margin: '4px', width: '60%'}}) : '',
-                dishViewModal(dish)
+                dishModalLink(dish)
             )
         ),
         cookTime > 0 ? div(
@@ -64,15 +75,17 @@ const todayMenuItem = (plan) => {
     )
 }
 
-const upcomingMenuItem = (plan) => {
-    return div(
+const upcomingMenuItem = (plan) =>
+    div(
         div({
-            style: {
-                color: colors.lightGrey,
-                'text-align': 'center',
-                'font-size': '5.5vh'
-            }
-        }, toMonthDay(plan.date)),
+                style: {
+                    color: colors.lightGrey,
+                    'text-align': 'center',
+                    'font-size': '5.5vh'
+                }
+            }, toMonthDay(plan.date),
+            editButton(plan.date)
+        ),
         ...plan.dishIds.map(id => dishes[id]).map(dish =>
             div({
                     style: {
@@ -81,11 +94,11 @@ const upcomingMenuItem = (plan) => {
                         'font-size': '4vh'
                     }
                 },
-                dishViewModal(dish)
+                dishModalLink(dish)
             )
         )
     )
-}
+
 
 const menuItem = (plan) => {
     let planDate = isoDateToLocaleDate(plan.date)
@@ -101,5 +114,24 @@ export default async () => section(
         }
     },
     await getMenuPlans().map(menuItem),
-    button({onclick: () => AddPlanModal.open(), tooltip: "Add Meal Plan"}, '+')
+    div({
+        style: {
+            'font-size': '9vh',
+            'height': '6vh',
+            'width': '6vh',
+            'line-height': '6vh',
+            cursor: 'pointer',
+            background: colors.lightGrey,
+            'border-radius': '5px',
+            display: 'flex',
+            color: colors.almostBlack,
+            margin: '15px auto',
+            'flex-direction': 'column',
+            'box-shadow': '0 0 3px 1px ' + colors.almostBlack,
+            'align-items': 'center',
+            padding: 0
+        },
+        onclick: () => EditMenu.open(),
+        tooltip: "Add Meal Plan"
+    }, '+')
 )
