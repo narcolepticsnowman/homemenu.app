@@ -1,26 +1,93 @@
-import {script} from "./fnelements.js";
+import {meta, script} from "./fnelements.js";
 import {fnstate} from "./fntags.js";
 
 export const readyState = fnstate({ready: false})
 
-let driveApi
 
 let initialized = false
 
 //TODO this only works when name is included
-const textContains = (search) =>search ? ` and fullText contains '${search}'` : ''
-const parentIs = (folderId) =>folderId ? ` and '${folderId}' in parents` : ''
+const textContains = (search) => search ? ` and fullText contains '${search}'` : ''
+const parentIs = (folderId) => folderId ? ` and '${folderId}' in parents` : ''
 const mimeTypeIs = (mimeType) => mimeType ? ` and mimeType='${mimeType}'` : ''
-const nameIs = (name) => name ? `name='${name}'` : ''
+const nameIs = (name) => name ? ` and name='${name}'` : ''
+
+// const execute = async (req)=> new Promise(resolve=>req.execute(resolve))
+
+let fileIds = []
+
+const newFileId = async ()=>{
+    if (fileIds.length < 1) {
+        let res = await gapi.client.request({
+            path: '/drive/v2/files/generateIds',
+            method: 'GET',
+            params: {
+                maxResults: 100,
+                space: 'drive'
+            },
+        })
+        fileIds = res.result.ids
+    }
+    return fileIds.pop()
+}
+
+const updateFile = async (object) => {
+    return await gapi.client.request({
+        path: '/upload/drive/v3/files/' + object.driveMeta.id,
+        method: 'PATCH',
+        params: {
+            uploadType: 'media',
+        },
+        body: JSON.stringify(object)
+    })
+}
+
+const uploadNew = async (object) => {
+    const boundary = '-------314159265358979323846';
+    const delimiter = "\r\n--" + boundary + "\r\n";
+    const close_delim = "\r\n--" + boundary + "--";
+
+    const metadata = {}
+
+    if (object.driveMeta.name) metadata.name = object.driveMeta.name.toString()
+    if (object.driveMeta.id) {
+        metadata.id = object.driveMeta.id
+    } else {
+        metadata.id = await newFileId()
+        object.driveMeta.id = metadata.id
+    }
+    if (object.driveMeta.folderId) metadata.parents = [object.driveMeta.folderId]
+    if (object.driveMeta.mimeType) metadata.mimeType = object.driveMeta.mimeType
+
+    const multipartRequestBody =
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        JSON.stringify(object) +
+        close_delim;
+
+    return await gapi.client.request({
+        'path': '/upload/drive/v3/files',
+        'method': 'POST',
+        'params': {'uploadType': 'multipart'},
+        'headers': {
+            'Content-Type': 'multipart/related; boundary="' + boundary + '"'
+        },
+        'body': multipartRequestBody
+    })
+}
+
 
 export default {
-    async getFile(fileId) {
-        return await driveApi.files.get({
+    async getFileInfo(fileId) {
+        return await gapi.client.drive.files.get({
             fileId: fileId
         })
     },
     async getFileContent(fileId) {
-        return await driveApi.files.get({
+        return await gapi.client.drive.files.get({
             fileId: fileId,
             alt: 'media'
         })
@@ -37,7 +104,7 @@ export default {
             'mimeType': 'application/vnd.google-apps.folder'
         };
         if (parent) fileMetadata.parents = [parent]
-        let response = await driveApi.files.create({
+        let response = await gapi.client.drive.files.create({
             resource: fileMetadata,
             fields: 'id'
         });
@@ -47,17 +114,17 @@ export default {
         return await this.findFiles(name, parent, 'application/vnd.google-apps.folder')
     },
     async findFiles(name, folderId = null, mimeType = null, fullText = null) {
-        let files = await driveApi.files.list({
-            q: `${nameIs(name)}${parentIs(folderId)}${mimeTypeIs(mimeType)}${textContains(fullText)}`,
-            fields: 'files(id, name)',
+        let files = await gapi.client.drive.files.list({
+            q: `trashed=false${nameIs(name)}${parentIs(folderId)}${mimeTypeIs(mimeType)}${textContains(fullText)}`,
+            fields: 'files(*)',
             spaces: 'drive'
-        });
+        })
         return files.result.files
     },
     async getShareLink(fileId) {
-        const permissions = await driveApi.permissions.list({})
+        const permissions = await gapi.client.drive.permissions.list({})
         if (!permissions.find(p => p.role === 'reader' && p.type === 'anyone')) {
-            await driveApi.permissions.create({
+            await gapi.client.drive.permissions.create({
                 fileId: fileId,
                 requestBody: {
                     role: 'reader',
@@ -66,50 +133,27 @@ export default {
             })
         }
 
-        return await this.getFile(fileId)
+        return await this.getFileInfo(fileId)
     },
-    async loadJson(name, folderId = null) {
-        let found = await this.findFiles(name, folderId)
-        let obj = null
-        if(found[0] && found[0].id){
-            let content = await this.getFileContent(found[0].id)
-            obj = JSON.parse(content)
-
+    async loadObject(fileId) {
+        let content = await this.getFileContent(fileId)
+        return content.result
+    },
+    async save(object) {
+        if (!object.driveMeta) {
+            object.driveMeta = {}
         }
-        return obj
-    },
-    async save(name, object, folderId = null) {
+        if(!object.driveMeta.mimeType){
+            object.driveMeta.mimeType = "application/json"
+        }
+        if (object.driveMeta.id)
+            return await updateFile(object)
+        else {
+            const result =  await uploadNew(object)
+            object.driveMeta.id = result.result.id
+            return result
+        }
 
-        const boundary = '-------314159265358979323846';
-        const delimiter = "\r\n--" + boundary + "\r\n";
-        const close_delim = "\r\n--" + boundary + "--";
-
-        const metadata = {
-            'name': name.toString(),
-            'mimeType': 'text/plain'
-        };
-        if(object.id) metadata.id = object.id
-        if (folderId) metadata.parents = [folderId]
-
-        const multipartRequestBody =
-            delimiter +
-            'Content-Type: application/json\r\n\r\n' +
-            JSON.stringify(metadata) +
-            delimiter +
-            'Content-Type: application/json\r\n\r\n' +
-            JSON.stringify(object) +
-            close_delim;
-
-        const request = gapi.client.request({
-            'path': '/upload/drive/v3/files',
-            'method': 'POST',
-            'params': {'uploadType': 'multipart'},
-            'headers': {
-                'Content-Type': 'multipart/related; boundary="' + boundary + '"'
-            },
-            'body': multipartRequestBody
-        });
-        return new Promise((resolve)=>request.execute(resolve))
 
     },
     init(clientId, apiKey) {
@@ -139,7 +183,6 @@ const handleLoaded = (clientId, apiKey) => new Promise(resolve => gapi.load('cli
     discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
     scope: "https://www.googleapis.com/auth/drive"
 }).then((res) => {
-    driveApi = gapi.client.drive
     readyState.ready = true
     resolve(res)
 })))

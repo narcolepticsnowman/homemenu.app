@@ -74,7 +74,9 @@
                                 'text-align': 'center'
                             }
                         },
-                        fnbind(datastoreState, () => datastoreState.loaded ? MenuBoard() : loading),
+                        fnbind(datastoreState, () => {
+                            return datastoreState.loaded ? MenuBoard() : loading
+                        }),
                         settings
                     )
                     :
