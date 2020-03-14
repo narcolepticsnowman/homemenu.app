@@ -6,7 +6,6 @@ import {menu} from "./fnelements.js";
 export const datastoreState = fnstate({loaded: false})
 const dishes = {}
 const menuPlans = {}
-
 let appFolderId, menuPlanFolderId, dishFolderId
 
 const appFolderName = "menu-plan.web.app_menu-data"
@@ -46,6 +45,29 @@ const getCachedObject = async (storage, key, loadValue) => {
     }
 }
 
+export const getMenuWeek = async ({week, year}) => {
+    const sunday = new Date(year, 0, (1 + (week - 1) * 7));
+    sunday.setHours(0, 0, 0, 0)
+    while (sunday.getDay() !== 0) {
+        sunday.setDate(sunday.getDate() - 1);
+    }
+
+    return await Promise.all([...new Array(7).keys()]
+        .map(i => datePlusDays(sunday, i))
+        .map(getMenuPlanByDate)
+    )
+}
+
+const getWeekNumber = (d) => {
+    d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay()||7));
+    let yearStart = new Date(Date.UTC(d.getUTCFullYear(),0,1));
+    let week = Math.ceil(( ( (d - yearStart) / 86400000) + 1)/7);
+
+    return {year: d.getUTCFullYear(), week};
+}
+
+
 export const loadData = async () => {
 
     if (!datastoreState.loaded) {
@@ -54,13 +76,10 @@ export const loadData = async () => {
         menuPlanFolderId = await getFolderId(menuPlanFolderName, appFolderId)
         dishFolderId = await getFolderId(dishFolderName, appFolderId)
 
-        const tedayyyyy = today();
-        const upcomingMenuPlans = await Promise.all([...new Array(5).keys()]
-            .map(i => datePlusDays(tedayyyyy, i))
-            .map(getMenuPlanByDate)
-        )
+        let thisWeeksMenu = await getMenuWeek(getWeekNumber(new Date()))
+
         Object.assign(menuPlans,
-            upcomingMenuPlans.reduce(
+            thisWeeksMenu.reduce(
                 (plans, plan) => {
                     plans[plan.date] = plan
                     return plans
@@ -84,8 +103,6 @@ export const getDishById = async (id) => {
         })
     }
 }
-
-const generateId = () => Math.random().toString(36).substring(2) + Date.now().toString(36)
 
 export const getMenuPlans = () =>
     Array.from(Object.values(menuPlans)).sort((a, b) => a.date > b.date ? 1 : -1)

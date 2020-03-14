@@ -9,13 +9,10 @@ export const colors = {
     darkGrey: '#808080',
     almostBlack: '#1b1b1b'
 }
-
-export const toMonthDay = (isoDate) => [isoDateToLocaleDate(isoDate)]
-    .map(date =>
-        `${(date.getMonth() + 1)}/${date.getDate().toString().padStart(2, "0")
-        }`)[0]
-
-export const isoDateToLocaleDate = (date) => new Date(date)
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+export const toDayName = (msDate) => {
+    return days[new Date(msDate).getDay()]
+}
 
 export const today = ()=>{
     let tdy = new Date()

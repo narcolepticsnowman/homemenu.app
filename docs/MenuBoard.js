@@ -1,6 +1,6 @@
 import {a, button, div, hr, img, section, span} from "./fnelements.js";
 import DishView from "./DishView.js";
-import {colors, humanTime, isoDateToLocaleDate, today, toMonthDay} from "./constants.js";
+import {colors, humanTime, today, toDayName} from "./constants.js";
 import {getMenuPlans} from "./datastore.js";
 import dishes from "./dishes.js";
 import EditMenu from "./EditMenu.js";
@@ -35,7 +35,7 @@ const todayMenuItem = (plan) => {
                     'text-align': 'center',
                     'font-size': '8.5vh'
                 }
-            }, toMonthDay(plan.date),
+            }, toDayName(plan.date),
             editButton(plan.date)
         ),
         img({src: "./border.svg", style: {width: '75%'}}),
@@ -83,7 +83,7 @@ const upcomingMenuItem = (plan) =>
                     'text-align': 'center',
                     'font-size': '5.5vh'
                 }
-            }, toMonthDay(plan.date),
+            }, toDayName(plan.date),
             editButton(plan.date)
         ),
         ...plan.dishIds.map(id => dishes[id]).map(dish =>
@@ -101,7 +101,7 @@ const upcomingMenuItem = (plan) =>
 
 
 const menuItem = (plan) => {
-    let planDate = isoDateToLocaleDate(plan.date)
+    let planDate = new Date(plan.date)
     let isToday = planDate.getTime() === today().getTime();
     return isToday ? todayMenuItem(plan) : upcomingMenuItem(plan)
 
@@ -113,25 +113,5 @@ export default async () => section(
             width: '100%'
         }
     },
-    await getMenuPlans().map(menuItem),
-    div({
-        style: {
-            'font-size': '9vh',
-            'height': '6vh',
-            'width': '6vh',
-            'line-height': '6vh',
-            cursor: 'pointer',
-            background: colors.lightGrey,
-            'border-radius': '5px',
-            display: 'flex',
-            color: colors.almostBlack,
-            margin: '15px auto',
-            'flex-direction': 'column',
-            'box-shadow': '0 0 3px 1px ' + colors.almostBlack,
-            'align-items': 'center',
-            padding: 0
-        },
-        onclick: () => EditMenu.open(),
-        tooltip: "Add Meal Plan"
-    }, '+')
+    await getMenuPlans().map(menuItem)
 )

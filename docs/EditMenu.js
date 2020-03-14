@@ -2,7 +2,7 @@ import Modal from "./Modal.js";
 import {button, div, form, input, span} from "./fnelements.js";
 import {fnbind, fnstate} from "./fntags.js";
 import {colors} from "./constants.js";
-import {getMenuPlanByDate, saveDish, saveMenuPlan} from './datastore.js'
+import {getDishById, getMenuPlanByDate, saveDish, saveMenuPlan} from './datastore.js'
 import autocomplete from "./autocomplete.js";
 import dishes from "./dishes.js";
 
@@ -122,18 +122,21 @@ const EditMenu = Modal({
         content: (planDate) => {
             if (planDate) getMenuPlanByDate(planDate).then(plan => {
                 menuPlan.current = plan
-                menuDishes.list = []
+                menuDishes.list = plan.dishIds.map(id=>dishes[id])
+                // return Promise.all(plan.dishIds.map(getDishById))
             })
+            //     .then(dishes=>{
+            //     menuDishes.list = dishes
+            // })
             return fnbind(menuPlan, () => div(
                 form(
                     {
                         onsubmit: (e) => {
                             e.preventDefault()
                             if (menuDishes.list.length > 0) {
-                                let dishIds = menuDishes.list
+                                menuPlan.current.dishIds = menuDishes.list
                                     .map(dish => dish.id ? dish : saveDish(dish))
                                     .map(dish => dish.id)
-                                menuPlan.current.dishIds = menuPlan.current.dishIds.concat(dishIds)
                             }
 
                             saveMenuPlan(menuPlan.current).then(() => {
