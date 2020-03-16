@@ -19,6 +19,7 @@
     import {authState, init, login} from "./gooooogle_sign-in.js";
     import {loadData, datastoreState} from "./datastore.js";
     import drive from "./drive.js";
+    import loading from "./loading.js";
 
 
     const centeredBlock = (...children) => div(
@@ -42,6 +43,10 @@
                 background-size: cover;
                 min-height: 100vh;
                 font-family: radium;
+                margin: 0;
+            }
+            input {
+                font-family: radium;
             }
             @font-face {
                 font-family: 'radium';
@@ -57,7 +62,7 @@
         `)
     )
 
-    let loading = centeredBlock(div({style: {'font-size': '4vh', color: colors.blue}}, "Loading..."));
+    let loadingBlock = centeredBlock(loading(125));
     fnapp(document.body,
         fnbind(authState, () =>
             authState.isLoaded ?
@@ -66,16 +71,16 @@
                         {
                             style: {
                                 margin: 'auto',
-                                'align-items': 'center',
-                                padding: '10px',
                                 display: 'flex',
                                 'flex-direction': 'column',
                                 'max-width': '650px',
-                                'text-align': 'center'
+                                'text-align': 'center',
+                                'justify-content': 'center',
+                                'min-height': '80vh',
                             }
                         },
                         fnbind(datastoreState, () => {
-                            return datastoreState.loaded ? MenuBoard() : loading
+                            return datastoreState.loaded ? MenuBoard() : loadingBlock
                         }),
                         settings
                     )
@@ -86,7 +91,7 @@
                     )
                 :
 
-                loading
+                loadingBlock
         )
     )
 

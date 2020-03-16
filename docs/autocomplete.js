@@ -3,26 +3,13 @@ import {fnbind, fnstate} from "./fntags.js";
 import {colors} from "./constants.js";
 
 
-const toDataArray = async (data, search) => {
-    let values
-    if (typeof data === 'function') {
-        values = await data(search)
-    }
-
-    if (Array.isArray(values)) {
-        return values
-    } else if (typeof values === 'object') {
-        return Array.from(Object.values(values))
-    } else {
-        return [values]
-    }
-}
 /**
  * Create an input that pops up a list of items that match the input text
  * @param data The data to search
  * @param displayProperty The object property to search, not needed for primitive values
  * @param stringMappers An array of functions that will map an object in the array to a string
  * @param style An object to override styles of the containing div
+ * @param inputStyle An object to override styles of the input element
  * @param resultClickHandler A click handler that will be attached to each result element. The handler receives the
  *          click event as the first argument and the record that matched as the second
  * @param placeholder The placeholder text for the input
@@ -35,6 +22,7 @@ export default ({
                     displayProperty = "",
                     stringMappers = [],
                     style = {},
+                    inputStyle = {},
                     resultClickHandler = () => {
                     },
                     placeholder = "",
@@ -47,6 +35,22 @@ export default ({
     let lastTriggered = 0
     let triggered = false
     let queued = false
+    let lastData = typeof data === 'function' ? [] : data
+    const toDataArray = async (data, search, useCached) => {
+        let values
+        if (typeof data === 'function') {
+            values = useCached ? lastData
+                : await data(search)
+        }
+
+        if (Array.isArray(values)) {
+            return values
+        } else if (typeof values === 'object') {
+            return Array.from(Object.values(values))
+        } else {
+            return [values]
+        }
+    }
     const updateSearch = (e) => {
         onchange(e)
         search.text = e.target.value.toLowerCase()
@@ -56,9 +60,10 @@ export default ({
         ) {
             triggered = true
             lastTriggered = new Date().getTime()
-            buildElements(data)
+            buildElements(search.text)
             setTimeout(() => triggered = false, debounce)
         } else if (triggered && !queued) {
+            buildElements(search.text, true)
             queued = true
             //this ensures changes made during the debounce period are accounted for
             setTimeout(() => {
@@ -68,7 +73,7 @@ export default ({
         }
     }
 
-    const buildElements = (searchText) => toDataArray(data, searchText).then(d => {
+    const buildElements = (searchText, useCached = false) => toDataArray(data, searchText, useCached).then(d => {
             dataElements.current = d.filter(v => v).map(
                 val => {
                     if (typeof val === 'object') {
@@ -116,22 +121,26 @@ export default ({
 
     return div(
         {
-            style: {
-                position: 'relative',
-                'display': 'flex',
-                'flex-direction': 'column',
-                'align-items': 'center',
-                ...style
-            }
+            style: Object.assign({
+                    position: 'relative',
+                    'display': 'inline-flex',
+                    'flex-direction': 'column',
+                    'align-items': 'center'
+                },
+                style
+            )
         },
         fnbind(search, input({
-            type: 'text', style: {
-                placeholder,
-                height: '4vh',
-                'font-size': '3vh',
-                width: '32vw',
-                'border-radius': '3px'
-            }, value: search.text, onkeyup: updateSearch, onchange: updateSearch
+            type: 'text', placeholder,
+            style: Object.assign({
+                    height: '4vh',
+                    'font-size': '3vh',
+                    'font-family': 'radium',
+                    width: '100%',
+                    'border-radius': '3px'
+                }, inputStyle
+            ),
+            value: search.text, onkeyup: updateSearch, onchange: updateSearch
         }), (el) => el.value = search.text),
         fnbind(dataElements,
             () => dataElements.current.length > 0 && search.text.length >= 2 ? div(

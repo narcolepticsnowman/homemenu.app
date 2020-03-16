@@ -1,9 +1,12 @@
 export default {
     1: {
-        id: 1,
+        meta:{
+            id: 1,
+        },
         name: "Marinated Flank Steak",
         recipe: null,
         recipeUrl: "http://allrecipes.com",
+        recipeImg: null,
         imageUrl: null,
         cookTime: 20,
         prepSteps: [

@@ -1,6 +1,7 @@
 export const colors = {
     green: "#d9ffa8",
     red: "#ffa8a8",
+    lightRed: "#ffc5c5",
     orange: "#ffd1a8",
     blue: "#bae1ff",
     yellow: '#faffba',
@@ -12,6 +13,16 @@ export const colors = {
 const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 export const toDayName = (msDate) => {
     return days[new Date(msDate).getDay()]
+}
+
+export const toMonthDay = (dt) => [new Date(dt)]
+    .map(date =>
+        `${(date.getMonth() + 1)}/${date.getDate().toString().padStart(2, "0")}`)[0]
+
+
+export const fixRange = (target, min, max) => {
+    if (typeof min === 'number' && target.value < min) target.value = min
+    if (typeof max === 'number' && target.value > max) target.value = max
 }
 
 export const today = ()=>{

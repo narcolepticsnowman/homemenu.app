@@ -1,24 +1,27 @@
 import {button, div, header, section} from "./fnelements.js";
+import {colors} from "./constants.js";
 
 export default ({content, onmounted, onclosed}) => {
 
-
-    let close = button({
+    let closebtn = div({
+            onmouseover() {
+                this.style.color = '#FFFFFF'
+            },
+            onmouseout() {
+                this.style.color = colors.offWhite
+            },
             style: {
                 'font-size': '32px',
                 float: 'right',
                 cursor: 'pointer',
-                padding: '5px 15px'
+                padding: '5px 15px',
+                color: colors.offWhite
             }
         }
         , "X"
     )
-     function getContent(){
-        let children = typeof content === 'function' ? content(...arguments) : content
-        return div(...(Array.isArray(children) ? children : [children]))
-    }
 
-    let currentContent = typeof content === 'function' ? div() : getContent()
+    let currentContent = typeof content === 'function' ? div() : content
     let m = div(
         {
             style: {
@@ -41,27 +44,35 @@ export default ({content, onmounted, onclosed}) => {
                     'padding-top': '20px'
                 }
             },
-            header(close),
+            header(closebtn),
             currentContent
         )
     )
+
+    const close = async () => {
+        if (onclosed && typeof onclosed === 'function') {
+            await onclosed()
+        }
+        m.remove()
+    }
+
+    function getContent() {
+        let children = typeof content === 'function' ? content(...arguments, close) : content
+        return div(...(Array.isArray(children) ? children : [children]))
+    }
+
     const res = {
-        open(){
+        open() {
             if (typeof content === 'function') {
-                currentContent.replaceWith(getContent(...arguments))
+                currentContent.replaceWith(getContent(...arguments, close))
             }
             document.body.append(m)
             if (onmounted && typeof onmounted === 'function') {
                 onmounted()
             }
         },
-        close: async () => {
-            if (onclosed && typeof onclosed === 'function') {
-                await onclosed()
-            }
-            m.remove()
-        }
+        close
     }
-    close.onclick = () => res.close()
+    closebtn.onclick = () => res.close()
     return res
 }

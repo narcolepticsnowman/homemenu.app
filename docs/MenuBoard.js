@@ -1,9 +1,10 @@
-import {a, button, div, hr, img, section, span} from "./fnelements.js";
+import {a, div, hr, img, section, span} from "./fnelements.js";
 import DishView from "./DishView.js";
-import {colors, humanTime, today, toDayName} from "./constants.js";
-import {getMenuPlans} from "./datastore.js";
-import dishes from "./dishes.js";
+import {colors, humanTime, today, toDayName, toMonthDay} from "./constants.js";
+import {currentWeek, getDishById} from "./datastore.js";
+
 import EditMenu from "./EditMenu.js";
+import {fnbind, fnstate} from "./fntags.js";
 
 const dishView = DishView
 const editMenu = EditMenu
@@ -18,47 +19,75 @@ const dishModalLink = (dish) => {
     )
 }
 
-const editButton = (planDate) => {
-    return button({
-        onclick: (e) => {
-            editMenu.open(planDate)
-        }
-    })
-}
-
-const todayMenuItem = (plan) => {
-    let cookTime = plan.dishIds.map(id => dishes[id] || {}).map(d => d.cookTime || 0).reduce((a, b) => a + b, 0)
+const todayMenuItem = (plan, dishes) => {
+    let cookTime = dishes.map(d => d.cookTime || 0).reduce((a, b) => a + b, 0)
     return div({style: {}},
+        img({src: "./border.svg", style: {width: '65%', 'margin-top': '15px'}}),
         div({
+                onmouseover() {
+                    this.style.color = colors.lightRed
+                },
+                onmouseout() {
+                    this.style.color = colors.red
+                },
+                onclick: () => editMenu.open(plan.date),
                 style: {
                     color: colors.red,
                     'text-align': 'center',
-                    'font-size': '8.5vh'
+                    'font-size': '6vh',
+                    cursor: 'pointer'
                 }
-            }, toDayName(plan.date),
-            editButton(plan.date)
-        ),
-        img({src: "./border.svg", style: {width: '75%'}}),
-        ...plan.dishIds.map(id => dishes[id] || {}).map((dish, i) =>
-            div({
+            },
+            div(
+                {
                     style: {
-                        color: colors.orange,
-                        cursor: 'pointer',
-                        'font-size': '6.5vh',
-                        'align-items': 'center',
-                        'flex-direction': 'column',
-                        'display': 'flex'
+                        display: 'flex',
+                        margin: 'auto',
+                        'max-width': '315px',
+                        'justify-content': 'space-between'
                     }
                 },
-                i > 0 ? hr({style: {color: colors.offWhite, margin: '4px', width: '60%'}}) : '',
-                dishModalLink(dish)
+                div(toDayName(plan.date)),
+                div(
+                    img({src: './chalk_icon.png', style: {width: '3vh', height: '3vh'}})
+                )
             )
+        ),
+        hr({style: {'max-width': '315px'}}),
+        ...(dishes.length > 0 ?
+                dishes.map((dish, i) =>
+                    div({
+                            style: {
+                                color: colors.orange,
+                                cursor: 'pointer',
+                                'font-size': '5.5vh',
+                                'align-items': 'center',
+                                'flex-direction': 'column',
+                                'display': 'flex'
+                            }
+                        },
+                        i > 0 ? hr({style: {color: colors.offWhite, margin: '4px', width: '60%'}}) : '',
+                        dishModalLink(dish)
+                    )
+                )
+                : [div({
+                        style: {
+                            color: colors.orange,
+                            cursor: 'pointer',
+                            'font-size': '5.5vh',
+                            'align-items': 'center',
+                            'flex-direction': 'column',
+                            'display': 'flex'
+                        }
+                    },
+                    '--'
+                )]
         ),
         cookTime > 0 ? div(
             {
                 style: {
                     'text-align': 'center',
-                    'font-size': '4vh'
+                    'font-size': '2.5vh'
                 }
             },
             span({
@@ -71,47 +100,83 @@ const todayMenuItem = (plan) => {
                 }
             }, humanTime(cookTime))
         ) : "",
-        img({src: "./border.svg", style: {width: '85%', transform: 'rotate(180deg);'}})
+        img({src: "./border.svg", style: {width: '60%', transform: 'scaleY(-1)', 'margin-bottom': '15px'}})
     )
 }
 
-const upcomingMenuItem = (plan) =>
+//TODO make collapsible
+const upcomingMenuItem = (plan, dishes) =>
     div(
         div({
+                onclick: () => editMenu.open(plan.date),
+                onmouseover() {
+                    this.style.color = colors.offWhite
+                },
+                onmouseout() {
+                    this.style.color = colors.lightGrey
+                },
                 style: {
                     color: colors.lightGrey,
                     'text-align': 'center',
-                    'font-size': '5.5vh'
+                    'font-size': '3.5vh',
+                    cursor: 'pointer'
                 }
-            }, toDayName(plan.date),
-            editButton(plan.date)
-        ),
-        ...plan.dishIds.map(id => dishes[id]).map(dish =>
-            div({
+            },
+            div(
+                {
                     style: {
-                        color: colors.darkGrey,
-                        cursor: 'pointer',
-                        'font-size': '4vh'
+                        display: 'flex',
+                        margin: 'auto',
+                        'max-width': '300px',
+                        'justify-content': 'space-between'
                     }
                 },
-                dishModalLink(dish)
+                div(toDayName(plan.date)),
+                div(
+                    img({src: './chalk_icon.png', style: {width: '2vh', height: '2vh'}})
+                )
             )
+        ),
+        ...(dishes.length > 0 ?
+                dishes.map(dish =>
+                    div({
+                            style: {
+                                color: colors.darkGrey,
+                                cursor: 'pointer',
+                                'font-size': '3vh',
+                                'text-decoration': plan.date < today().getTime() ? 'line-through' : 'none'
+                            }
+                        },
+                        dishModalLink(dish)
+                    )
+                )
+                : [
+                    div({
+                            style: {
+                                color: colors.darkGrey,
+                                cursor: 'pointer',
+                                'font-size': '3vh',
+                                'text-decoration': plan.date < today().getTime() ? 'line-through' : 'none'
+                            }
+                        },
+                        '--')
+                ]
         )
     )
 
 
 const menuItem = (plan) => {
     let planDate = new Date(plan.date)
-    let isToday = planDate.getTime() === today().getTime();
-    return isToday ? todayMenuItem(plan) : upcomingMenuItem(plan)
+    const planDishes = fnstate({list: []})
+    Promise.all(plan.dishIds.map(getDishById))
+        .then(dishes=>{
+            planDishes.list = dishes
+        })
 
+    let isToday = planDate.getTime() === today().getTime();
+    return isToday ? fnbind(planDishes, ()=> todayMenuItem(plan, planDishes.list)) : fnbind(planDishes, ()=>upcomingMenuItem(plan, planDishes.list))
 }
 
-export default async () => section(
-    {
-        style: {
-            width: '100%'
-        }
-    },
-    await getMenuPlans().map(menuItem)
-)
+export default () => fnbind(currentWeek, () => section(
+    currentWeek.list.map(menuItem)
+))

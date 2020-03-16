@@ -1,4 +1,4 @@
-import {meta, script} from "./fnelements.js";
+import {script} from "./fnelements.js";
 import {fnstate} from "./fntags.js";
 
 export const readyState = fnstate({ready: false})
@@ -16,7 +16,7 @@ const nameIs = (name) => name ? ` and name='${name}'` : ''
 
 let fileIds = []
 
-const newFileId = async ()=>{
+const newFileId = async () => {
     if (fileIds.length < 1) {
         let res = await gapi.client.request({
             path: '/drive/v2/files/generateIds',
@@ -82,14 +82,14 @@ const uploadNew = async (object) => {
 
 export default {
     async getFileInfo(fileId) {
-        return await gapi.client.drive.files.get({
-            fileId: fileId
+        return await gapi.client.request({
+            path: '/drive/v3/files/' + fileId
         })
     },
     async getFileContent(fileId) {
-        return await gapi.client.drive.files.get({
-            fileId: fileId,
-            alt: 'media'
+        return await gapi.client.request({
+            path: '/drive/v3/files/' + fileId,
+            params: {alt: 'media'}
         })
     },
     async getOrCreateFolder(name, parent = null) {
@@ -104,32 +104,42 @@ export default {
             'mimeType': 'application/vnd.google-apps.folder'
         };
         if (parent) fileMetadata.parents = [parent]
-        let response = await gapi.client.drive.files.create({
-            resource: fileMetadata,
-            fields: 'id'
-        });
+        let response = await gapi.client.request({
+            path: '/drive/v3/files',
+            method: 'POST',
+            params: {
+                uploadType: 'media'
+            },
+            body: JSON.stringify(fileMetadata)
+        })
         return response.result
     },
     async findFolders(name, parent = null) {
         return await this.findFiles(name, parent, 'application/vnd.google-apps.folder')
     },
-    async findFiles(name, folderId = null, mimeType = null, fullText = null) {
-        let files = await gapi.client.drive.files.list({
-            q: `trashed=false${nameIs(name)}${parentIs(folderId)}${mimeTypeIs(mimeType)}${textContains(fullText)}`,
-            fields: 'files(*)',
-            spaces: 'drive'
+    async findFiles({name, folderId, mimeType, fullText}) {
+        let files = await gapi.client.request({
+            path: '/drive/v3/files',
+            params: {
+                q: `trashed=false${nameIs(name)}${parentIs(folderId)}${mimeTypeIs(mimeType)}${textContains(fullText)}`,
+                fields: 'files(*)',
+                spaces: 'drive'
+            }
         })
         return files.result.files
     },
     async getShareLink(fileId) {
-        const permissions = await gapi.client.drive.permissions.list({})
+        const permissions = await gapi.client.request({
+            path: `/drive/v3/files/${fileId}/permissions`
+        })
         if (!permissions.find(p => p.role === 'reader' && p.type === 'anyone')) {
-            await gapi.client.drive.permissions.create({
-                fileId: fileId,
-                requestBody: {
+            await gapi.client.request({
+                path: `/drive/v3/files/${fileId}/permissions`,
+                method: 'POST',
+                body: JSON.stringify({
                     role: 'reader',
                     type: 'anyone',
-                }
+                })
             })
         }
 
@@ -143,18 +153,17 @@ export default {
         if (!object.driveMeta) {
             object.driveMeta = {}
         }
-        if(!object.driveMeta.mimeType){
+        if (!object.driveMeta.mimeType) {
             object.driveMeta.mimeType = "application/json"
         }
-        if (object.driveMeta.id)
-            return await updateFile(object)
-        else {
-            const result =  await uploadNew(object)
-            object.driveMeta.id = result.result.id
-            return result
+        if (object.driveMeta.id) {
+            let res = await updateFile(object)
+            return res.result
+        } else {
+            const res = await uploadNew(object)
+            object.driveMeta.id = res.result.id
+            return res.result
         }
-
-
     },
     init(clientId, apiKey) {
         return new Promise(resolve => {
@@ -180,7 +189,7 @@ export default {
 const handleLoaded = (clientId, apiKey) => new Promise(resolve => gapi.load('client:auth2', () => gapi.client.init({
     apiKey: apiKey,
     clientId: clientId,
-    discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
+    discoveryDocs: [],
     scope: "https://www.googleapis.com/auth/drive"
 }).then((res) => {
     readyState.ready = true
