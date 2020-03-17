@@ -66,7 +66,6 @@ const todayMenuItem = (plan, dishes) => {
                                 'display': 'flex'
                             }
                         },
-                        i > 0 ? hr({style: {color: colors.offWhite, margin: '4px', width: '60%'}}) : '',
                         dishModalLink(dish)
                     )
                 )

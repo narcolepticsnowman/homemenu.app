@@ -2,7 +2,7 @@ import Modal from "./Modal.js";
 import {div, form, hr, img, input, span} from "./fnelements.js";
 import {fnbind, fnstate} from "./fntags.js";
 import {colors, toDayName, toMonthDay} from "./constants.js";
-import {findDishes, getDishById, getMenuPlanByDate, saveDish, saveMenuPlan} from './datastore.js'
+import {currentWeek, getDishById, getDishNameIndex, getMenuPlanByDate, saveDish, saveMenuPlan} from './datastore.js'
 import autocomplete from "./autocomplete.js";
 
 
@@ -15,11 +15,15 @@ let menuPlan = fnstate({current: emptyPlan()})
 
 const menuDishes = fnstate({list: []})
 
-const driveId = (o)=> o && o.driveMeta && o.driveMeta.id || null
+const driveId = (o) => o && o.driveMeta && o.driveMeta.id || null
 
-const addDish = (dish) => {
+const addDish = (dish) =>
     menuDishes.list = menuDishes.list.filter(d => driveId(d) !== driveId(dish)).concat(dish)
-}
+
+
+const removeDish = (dishId) =>
+    menuDishes.list = menuDishes.list.filter(d => driveId(d) !== dishId)
+
 
 const dishInput = (placeholder, newDish, prop, type = 'text') =>
     div(
@@ -57,11 +61,18 @@ const dishForm = (dish, i) =>
                     margin: 'auto'
                 }
             },
-            span({style: {cursor: 'pointer'}, onclick:  () => {
+            span({
+                style: {cursor: 'pointer'}, onclick: () => {
+                    menuDishes.list = menuDishes.list.map((o,j)=> j === i ? Object.assign({driveMeta: {id: "pending"}}, o) : o)
                     saveDish(dish).then((saved) => {
+                        menuDishes.list = menuDishes.list.filter((o,j)=>i!==j)
                         addDish(saved)
-                    }).catch(console.error)
-                }}, "Save"),
+                    }).catch((e) => {
+                        console.error(e)
+                        addDish(dish)
+                    })
+                }
+            }, "Save"),
             span({
                 style: {cursor: 'pointer'}, onclick: () => menuDishes.list = menuDishes.list.splice(i, 1)
             }, "Cancel")
@@ -73,14 +84,11 @@ const existingDish = (dish) => div(
     span({style: {color: colors.orange, 'font-size': '3vh'}}, dish.name),
     span({
         style: {
-            color: colors.offWhite
+            color: colors.offWhite,
+            cursor: 'pointer',
+            margin: '0 10px'
         },
-        onclick: () => {
-            menuPlan.current = Object.assign(menuPlan.current, {
-                dishIds: menuPlan.current.dishIds.filter(id => id !== driveId(dish))
-            })
-            menuDishes.list = menuDishes.list.filter(d => driveId(d) !== driveId(dish))
-        }
+        onclick: () => removeDish(driveId(dish))
     }, "X")
 )
 
@@ -91,13 +99,15 @@ const save = async (close) => {
     submitting = true
     try {
         if (menuDishes.list.length > 0) {
-            let savedDishes = await Promise.all( menuDishes.list
+            let savedDishes = await Promise.all(menuDishes.list
                 .map((dish) => driveId(dish) ? Promise.resolve(dish) : saveDish(dish)))
             menuPlan.current.dishIds = savedDishes.map(dish => driveId(dish))
+            currentWeek.list = currentWeek.list.map(p => p.date === menuPlan.current.date ? menuPlan : p)
         }
-        saveMenuPlan(menuPlan.current).then(() => {
+        saveMenuPlan(menuPlan.current).then(saved => {
             menuDishes.list = []
             menuPlan.current = emptyPlan()
+            currentWeek.list = currentWeek.list.map(p => p.date === saved.date ? saved : p)
             submitting = false
         }).catch(e => {
             submitting = false
@@ -112,12 +122,12 @@ const save = async (close) => {
 }
 
 const EditMenu = Modal({
-        content:  (planDate, close) => {
+        content: (planDate, close) => {
             if (planDate) getMenuPlanByDate(planDate).then(plan => {
                 menuPlan.current = plan
                 return Promise.all(plan.dishIds.map(id => getDishById(id)))
             })
-                .then(dishes=>{
+                .then(dishes => {
                     menuDishes.list = dishes
                 })
             return fnbind(menuPlan, () => div(
@@ -172,7 +182,7 @@ const EditMenu = Modal({
                                 inputStyle: {
                                     'text-align': 'center'
                                 },
-                                data: findDishes,
+                                data: getDishNameIndex,
                                 displayProperty: "name",
                                 stringMappers: [(dish) => dish.name, (dish) => dish.recipeUrl],
                                 placeholder: "Find Dish",
@@ -208,7 +218,7 @@ const EditMenu = Modal({
                             onmouseout() {
                                 this.style.color = colors.offWhite
                             },
-                            onclick: ()=>save(close),
+                            onclick: () => save(close),
                             style: {
                                 color: colors.offWhite,
                                 'font-size': '4vh',

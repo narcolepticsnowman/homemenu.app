@@ -82,9 +82,13 @@ const uploadNew = async (object) => {
 
 export default {
     async getFileInfo(fileId) {
-        return await gapi.client.request({
-            path: '/drive/v3/files/' + fileId
+        let res = await gapi.client.request({
+            path: '/drive/v3/files/' + fileId,
+            params: {
+                fields: 'files(*)'
+            }
         })
+        return res.result
     },
     async getFileContent(fileId) {
         return await gapi.client.request({
@@ -115,7 +119,7 @@ export default {
         return response.result
     },
     async findFolders(name, parent = null) {
-        return await this.findFiles(name, parent, 'application/vnd.google-apps.folder')
+        return await this.findFiles({name, folderId: parent, mimeType: 'application/vnd.google-apps.folder'})
     },
     async findFiles({name, folderId, mimeType, fullText}) {
         let files = await gapi.client.request({
@@ -156,6 +160,7 @@ export default {
         if (!object.driveMeta.mimeType) {
             object.driveMeta.mimeType = "application/json"
         }
+        object.driveMeta.lastUpdated = new Date().getTime()
         if (object.driveMeta.id) {
             let res = await updateFile(object)
             return res.result
