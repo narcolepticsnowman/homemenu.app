@@ -3,10 +3,6 @@ import {fnstate} from "./fntags.js";
 import {datePlusDays, today} from "./constants.js";
 
 export const datastoreState = fnstate({loaded: false})
-const dishes = {}
-const menuPlans = {}
-let dishNames = []
-let appFolderId, menuPlanFolderId, dishFolderId
 export const currentWeek = fnstate({list: []})
 
 const appFolderName = "menu-plan.web.app_menu-data"
@@ -55,16 +51,15 @@ const getMenuPlansAround = async (date) => {
     )
 }
 
+export const getDishFolderId = async () => await getFolderId(dishFolderName, await getAppFolderId())
+export const getMenuPlanFolderId = async () => await getFolderId(menuPlanFolderName, await getAppFolderId())
+
+//TODO handle shared folders
+export const getAppFolderId = async () => await getFolderId(appFolderName)
+
 export const loadData = async () => {
-
     if (!datastoreState.loaded) {
-        //TODO handle shared folders
-        appFolderId = await getFolderId(appFolderName)
-        menuPlanFolderId = await getFolderId(menuPlanFolderName, appFolderId)
-        dishFolderId = await getFolderId(dishFolderName, appFolderId)
-
         currentWeek.list = await getMenuPlansAround(today())
-
         datastoreState.loaded = true
     }
 }
@@ -82,7 +77,7 @@ export const getMenuPlanByDate = async (msDate) => await getCachedObject(
         storage: sessionStorage,
         key: menuPlanKeyPrefix + msDate,
         loadValue: async () => {
-            let files = await drive.findFiles({name: msDate, folderId: menuPlanFolderId})
+            let files = await drive.findFiles({name: msDate, folderId: await getMenuPlanFolderId()})
             let menuPlan
             if (files && files.length > 0) {
                 menuPlan = await drive.loadObject(files[0].id)
@@ -98,13 +93,11 @@ export const saveDish = async (dish) => {
     if (!dish.driveMeta) {
         dish.driveMeta = {
             name: dish.name,
-            folderId: dishFolderId
+            folderId: await getDishFolderId()
         }
     }
     let saved = await drive.save(dish)
     await addDishNameToIndex({id: saved.id, name: dish.name})
-
-    dishes[saved.id] = dish
     sessionStorage.setItem("dish_" + dish.driveMeta.id, JSON.stringify(dish))
     return dish
 }
@@ -113,7 +106,7 @@ export const saveMenuPlan = async (menuPlan) => {
     if (!menuPlan.driveMeta) {
         menuPlan.driveMeta = {
             name: menuPlan.date,
-            folderId: menuPlanFolderId
+            folderId: await getMenuPlanFolderId()
         }
     }
     let currentIndex = currentWeek.list.findIndex(plan => plan.date === menuPlan.date)
@@ -136,8 +129,8 @@ export const saveMenuPlan = async (menuPlan) => {
 const addDishNameToIndex = async ({id, name}) => {
     let dishNameIndex = await getDishNameIndex()
     dishNameIndex.index[id] = name
-     await drive.save(dishNameIndex)
-    localStorage.setItem("dish-name-index_"+ dishFolderId, JSON.stringify(dishNameIndex))
+    await drive.save(dishNameIndex)
+    localStorage.setItem("dish-name-index_" + await getDishFolderId(), JSON.stringify(dishNameIndex))
 }
 
 let dishNameLastUpdate = -1
@@ -145,10 +138,11 @@ let dishNameLastUpdate = -1
 export const getDishNameIndex = async () => await getCachedObject(
     {
         storage: localStorage,
-        key: "dish-name-index_" + dishFolderId,
+        key: "dish-name-index_" + await getDishFolderId(),
         loadValue: async () => {
             let fileName = 'dish-name-index';
-            let files = await drive.findFiles({name: fileName, folderId: dishFolderId})
+            let files = await drive.findFiles({name: fileName, folderId: await getDishFolderId()})
+            let dishNames
             if (files && files.length > 0) {
                 dishNames = await drive.loadObject(files[0].id)
             } else {
@@ -157,7 +151,7 @@ export const getDishNameIndex = async () => await getCachedObject(
                 dishNames = {
                     driveMeta: {
                         name: fileName,
-                        folderId: dishFolderId
+                        folderId: await getDishFolderId()
                     },
                     index: {}
                 }

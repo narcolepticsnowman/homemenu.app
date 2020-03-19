@@ -21,8 +21,8 @@ const addDish = (dish) =>
     menuDishes.list = menuDishes.list.filter(d => driveId(d) !== driveId(dish)).concat(dish)
 
 
-const removeDish = (dishId) =>
-    menuDishes.list = menuDishes.list.filter(d => driveId(d) !== dishId)
+const removeDish = (i) =>
+    menuDishes.list = menuDishes.list.filter((o, j) => i !== j)
 
 
 const dishInput = (placeholder, newDish, prop, type = 'text') =>
@@ -69,7 +69,7 @@ const dishForm = (dish, i) =>
                     let dishSave = saveDish(dish);
                     dishSavePromises.push(dishSave)
                     dishSave.then((saved) => {
-                        menuDishes.list = menuDishes.list.filter((o, j) => i !== j)
+                        removeDish(i)
                         addDish(saved)
                     }).catch((e) => {
                         console.error(e)
@@ -79,14 +79,14 @@ const dishForm = (dish, i) =>
             }, "Save"),
             span({
                 style: {cursor: 'pointer'}, onclick: () => {
-                    menuDishes.list = menuDishes.list.filter((o, j) => i !== j)
+                    removeDish(i)
                 }
             }, "Cancel")
         ),
         hr()
     )
 
-const existingDish = (dish) => div(
+const existingDish = (dish, i) => div(
     span({style: {color: colors.orange, 'font-size': '3vh'}}, dish.name),
     span({
         style: {
@@ -94,7 +94,7 @@ const existingDish = (dish) => div(
             cursor: 'pointer',
             margin: '0 10px'
         },
-        onclick: () => removeDish(driveId(dish))
+        onclick: () => removeDish(i)
     }, "X")
 )
 
@@ -106,9 +106,7 @@ const save = async (close) => {
     try {
         //TODO show loading spinner
         Promise.all(dishSavePromises).then(() => {
-            if (menuDishes.list.length > 0) {
-                menuPlan.current.dishIds = menuDishes.list.map(d => driveId(d))
-            }
+            menuPlan.current.dishIds = menuDishes.list.map(d => driveId(d))
             saveMenuPlan(menuPlan.current).then(saved => {
                 menuDishes.list = []
                 menuPlan.current = emptyPlan()
@@ -169,7 +167,7 @@ const EditMenu = Modal({
                         fnbind(menuDishes, () => div(
                             menuDishes.list.map((dish, i) =>
                                 driveId(dish)
-                                    ? existingDish(dish)
+                                    ? existingDish(dish, i)
                                     : dishForm(dish, i)
                             )
                         )),
