@@ -43,6 +43,8 @@ const dishInput = (placeholder, newDish, prop, type = 'text') =>
         })
     )
 
+let dishSavePromises = []
+
 const dishForm = (dish, i) =>
     form({
             onsubmit: (e) => e.preventDefault()
@@ -63,9 +65,11 @@ const dishForm = (dish, i) =>
             },
             span({
                 style: {cursor: 'pointer'}, onclick: () => {
-                    menuDishes.list = menuDishes.list.map((o,j)=> j === i ? Object.assign({driveMeta: {id: "pending"}}, o) : o)
-                    saveDish(dish).then((saved) => {
-                        menuDishes.list = menuDishes.list.filter((o,j)=>i!==j)
+                    //TODO show loading spinner
+                    let dishSave = saveDish(dish);
+                    dishSavePromises.push(dishSave)
+                    dishSave.then((saved) => {
+                        menuDishes.list = menuDishes.list.filter((o, j) => i !== j)
                         addDish(saved)
                     }).catch((e) => {
                         console.error(e)
@@ -74,7 +78,9 @@ const dishForm = (dish, i) =>
                 }
             }, "Save"),
             span({
-                style: {cursor: 'pointer'}, onclick: () => menuDishes.list = menuDishes.list.splice(i, 1)
+                style: {cursor: 'pointer'}, onclick: () => {
+                    menuDishes.list = menuDishes.list.filter((o, j) => i !== j)
+                }
             }, "Cancel")
         ),
         hr()
@@ -98,25 +104,27 @@ const save = async (close) => {
     if (submitting) return
     submitting = true
     try {
-        if (menuDishes.list.length > 0) {
-            let savedDishes = await Promise.all(menuDishes.list
-                .map((dish) => driveId(dish) ? Promise.resolve(dish) : saveDish(dish)))
-            menuPlan.current.dishIds = savedDishes.map(dish => driveId(dish))
-            currentWeek.list = currentWeek.list.map(p => p.date === menuPlan.current.date ? menuPlan : p)
-        }
-        saveMenuPlan(menuPlan.current).then(saved => {
-            menuDishes.list = []
-            menuPlan.current = emptyPlan()
-            currentWeek.list = currentWeek.list.map(p => p.date === saved.date ? saved : p)
-            submitting = false
-        }).catch(e => {
-            submitting = false
-            console.error(e)
+        //TODO show loading spinner
+        Promise.all(dishSavePromises).then(() => {
+            if (menuDishes.list.length > 0) {
+                menuPlan.current.dishIds = menuDishes.list.map(d => driveId(d))
+            }
+            saveMenuPlan(menuPlan.current).then(saved => {
+                menuDishes.list = []
+                menuPlan.current = emptyPlan()
+                currentWeek.list = currentWeek.list.map(p => p.date === saved.date ? saved : p)
+                submitting = false
+                close()
+            }).catch(e => {
+                submitting = false
+                console.error(e)
+                close()
+            })
         })
+
     } catch (e) {
         submitting = false
         console.error(e)
-    } finally {
         close()
     }
 }
@@ -182,11 +190,15 @@ const EditMenu = Modal({
                                 inputStyle: {
                                     'text-align': 'center'
                                 },
-                                data: getDishNameIndex,
+                                data: async () => {
+                                    let index = (await getDishNameIndex()).index
+                                    return [...Object.keys(index)].map(id=>({id, name: index[id]}))
+                                },
                                 displayProperty: "name",
                                 stringMappers: [(dish) => dish.name, (dish) => dish.recipeUrl],
                                 placeholder: "Find Dish",
-                                resultClickHandler: (e, dish) => {
+                                resultClickHandler: async (e, match) => {
+                                    let dish = await getDishById(match.id)
                                     menuDishes.list = menuDishes.list.concat(dish)
                                 }
                             }),

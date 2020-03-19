@@ -84,7 +84,7 @@ export default ({
                             return {record: val, str: (val[displayProperty] || "").toString()}
                         }
                     } else {
-                        return {record: val, str: val.toString}
+                        return {record: val, str: val.toString()}
                     }
                 })
                 .map(recordWithStringRepr => {

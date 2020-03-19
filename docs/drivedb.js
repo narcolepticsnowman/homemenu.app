@@ -19,10 +19,10 @@ let fileIds = []
 const newFileId = async () => {
     if (fileIds.length < 1) {
         let res = await gapi.client.request({
-            path: '/drive/v2/files/generateIds',
+            path: '/drive/v3/files/generateIds',
             method: 'GET',
             params: {
-                maxResults: 100,
+                count: 100,
                 space: 'drive'
             },
         })
@@ -31,47 +31,42 @@ const newFileId = async () => {
     return fileIds.pop()
 }
 
-const updateFile = async (object) => {
-    return await gapi.client.request({
-        path: '/upload/drive/v3/files/' + object.driveMeta.id,
-        method: 'PATCH',
-        params: {
-            uploadType: 'media',
-        },
-        body: JSON.stringify(object)
-    })
+const googleMetaFromDriveMeta = async (driveMeta) => {
+    if (!driveMeta) driveMeta = {}
+    return {
+        id: driveMeta.id || (driveMeta.id = await newFileId()),
+        name: driveMeta.name || "",
+        parents: driveMeta.folderId ? [driveMeta.folderId] : [],
+        mimeType: driveMeta.mimeType || "application/json",
+        appProperties: {
+            lastUpdated: new Date().getTime(),
+            createdAt: driveMeta.createdAt || new Date().getTime()
+        }
+    }
 }
 
-const uploadNew = async (object) => {
+const multipartRequest = async ({fileContent, metaData, path, method, params}) => {
     const boundary = '-------314159265358979323846';
     const delimiter = "\r\n--" + boundary + "\r\n";
     const close_delim = "\r\n--" + boundary + "--";
 
-    const metadata = {}
-
-    if (object.driveMeta.name) metadata.name = object.driveMeta.name.toString()
-    if (object.driveMeta.id) {
-        metadata.id = object.driveMeta.id
-    } else {
-        metadata.id = await newFileId()
-        object.driveMeta.id = metadata.id
-    }
-    if (object.driveMeta.folderId) metadata.parents = [object.driveMeta.folderId]
-    if (object.driveMeta.mimeType) metadata.mimeType = object.driveMeta.mimeType
-
-    const multipartRequestBody =
+    let multipartRequestBody =
         delimiter +
         'Content-Type: application/json\r\n\r\n' +
-        JSON.stringify(metadata) +
-        delimiter +
-        'Content-Type: application/json\r\n\r\n' +
-        JSON.stringify(object) +
-        close_delim;
+        JSON.stringify(metaData)
+
+    if (fileContent)
+        multipartRequestBody += delimiter +
+            'Content-Type: application/json\r\n\r\n' +
+            JSON.stringify(fileContent) +
+            close_delim
+    else
+        multipartRequestBody += close_delim
 
     return await gapi.client.request({
-        'path': '/upload/drive/v3/files',
-        'method': 'POST',
-        'params': {'uploadType': 'multipart'},
+        'path': path,
+        'method': method,
+        'params': Object.assign(params || {}, {'uploadType': 'multipart'}),
         'headers': {
             'Content-Type': 'multipart/related; boundary="' + boundary + '"'
         },
@@ -79,13 +74,12 @@ const uploadNew = async (object) => {
     })
 }
 
-
 export default {
-    async getFileInfo(fileId) {
+    async getFileMeta(fileId) {
         let res = await gapi.client.request({
             path: '/drive/v3/files/' + fileId,
             params: {
-                fields: 'files(*)'
+                fields: '*'
             }
         })
         return res.result
@@ -97,24 +91,30 @@ export default {
         })
     },
     async getOrCreateFolder(name, parent = null) {
-        let f = await this.findFolders(name, parent)
-        if (!f) {
-            f = this.createFolder(name, parent)
+        let folders = null
+        try {
+            folders = await this.findFolders(name, parent);
+        } catch (e) {
+            if (!(e.result && e.result.error.code === 404)) {
+                throw e
+            }
+        }
+
+        if (folders && folders.length > 0) {
+            return folders[0]
+        } else {
+            return await this.createFolder(name, parent)
         }
     },
     async createFolder(name, parent = null) {
-        let fileMetadata = {
-            name,
-            'mimeType': 'application/vnd.google-apps.folder'
-        };
-        if (parent) fileMetadata.parents = [parent]
-        let response = await gapi.client.request({
-            path: '/drive/v3/files',
+        let response = await multipartRequest({
+            path: '/upload/drive/v3/files',
             method: 'POST',
-            params: {
-                uploadType: 'media'
-            },
-            body: JSON.stringify(fileMetadata)
+            metaData: {
+                name,
+                'mimeType': 'application/vnd.google-apps.folder',
+                parents: parent ? [parent] : []
+            }
         })
         return response.result
     },
@@ -147,26 +147,35 @@ export default {
             })
         }
 
-        return await this.getFileInfo(fileId)
+        return await this.getFileMeta(fileId)
     },
     async loadObject(fileId) {
         let content = await this.getFileContent(fileId)
         return content.result
     },
     async save(object) {
-        if (!object.driveMeta) {
-            object.driveMeta = {}
-        }
-        if (!object.driveMeta.mimeType) {
-            object.driveMeta.mimeType = "application/json"
-        }
-        object.driveMeta.lastUpdated = new Date().getTime()
-        if (object.driveMeta.id) {
-            let res = await updateFile(object)
+        let isCreate = !(object && object.driveMeta && object.driveMeta.id)
+        object.driveMeta = await googleMetaFromDriveMeta(object.driveMeta)
+        if (isCreate) {
+            const res = await multipartRequest({
+                fileContent: object,
+                metaData: object.driveMeta,
+                path: '/upload/drive/v3/files',
+                method: 'POST'
+            })
+            object.driveMeta.id = res.result.id
             return res.result
         } else {
-            const res = await uploadNew(object)
-            object.driveMeta.id = res.result.id
+            const meta = Object.assign({}, object.driveMeta)
+            delete meta.id
+            const res = await multipartRequest(
+                {
+                    fileContent: object,
+                    metaData: meta,
+                    path: '/upload/drive/v3/files/'+object.driveMeta.id,
+                    method: 'PATCH'
+                }
+            )
             return res.result
         }
     },

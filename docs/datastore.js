@@ -1,4 +1,4 @@
-import drive from "./drive.js";
+import drive from "./drivedb.js";
 import {fnstate} from "./fntags.js";
 import {datePlusDays, today} from "./constants.js";
 
@@ -20,21 +20,8 @@ const getFolderId = async (name, parent = null) =>
             storage: localStorage,
             key: name + "_folder-id",
             loadValue: async () => {
-                let folders = null
-                try {
-                    folders = await drive.findFolders(name, parent);
-                } catch (e) {
-                    if (!(e.result && e.result.error.code === 404)) {
-                        throw e
-                    }
-                }
-
-                if (folders && folders.length > 0) {
-                    return folders[0].id
-                } else {
-                    let folder = await drive.createFolder(name, parent)
-                    return folder.id
-                }
+                let folder = await drive.getOrCreateFolder(name, parent)
+                return folder.id
             }
         }
     )
@@ -115,7 +102,7 @@ export const saveDish = async (dish) => {
         }
     }
     let saved = await drive.save(dish)
-    addDishNameToIndex({id: saved.id, name: dish.name})
+    await addDishNameToIndex({id: saved.id, name: dish.name})
 
     dishes[saved.id] = dish
     sessionStorage.setItem("dish_" + dish.driveMeta.id, JSON.stringify(dish))
@@ -147,28 +134,44 @@ export const saveMenuPlan = async (menuPlan) => {
 }
 
 const addDishNameToIndex = async ({id, name}) => {
-    let dishNameIndex = getDishNameIndex()
-    dishNameIndex[id] = name
-    return await drive.save(dishNameIndex)
+    let dishNameIndex = await getDishNameIndex()
+    dishNameIndex.index[id] = name
+     await drive.save(dishNameIndex)
+    localStorage.setItem("dish-name-index_"+ dishFolderId, JSON.stringify(dishNameIndex))
 }
+
+let dishNameLastUpdate = -1
 
 export const getDishNameIndex = async () => await getCachedObject(
     {
         storage: localStorage,
         key: "dish-name-index_" + dishFolderId,
         loadValue: async () => {
-            let files = await drive.findFiles({name: 'dish-name-index', folderId: dishFolderId})
+            let fileName = 'dish-name-index';
+            let files = await drive.findFiles({name: fileName, folderId: dishFolderId})
             if (files && files.length > 0) {
                 dishNames = await drive.loadObject(files[0].id)
             } else {
-                dishNames = {}
+                //TODO check for existing dishes and include them in the index
+                //TODO provide way to search shared folders
+                dishNames = {
+                    driveMeta: {
+                        name: fileName,
+                        folderId: dishFolderId
+                    },
+                    index: {}
+                }
                 await drive.save(dishNames)
             }
             return dishNames
         },
         isValid: async (stored) => {
-            let fileInfo = await drive.getFileInfo(stored.driveMeta.id)
-            return stored.driveMeta.lastUpdated < new Date(fileInfo.updateTime).getTime()
+            if (dishNameLastUpdate === -1) {
+                dishNameLastUpdate = -2
+                let fileInfo = await drive.getFileMeta(stored.driveMeta.id)
+                dishNameLastUpdate = Date.parse(fileInfo.modifiedTime)
+            }
+            return stored.driveMeta.appProperties.lastUpdated < dishNameLastUpdate
         }
     }
 )
