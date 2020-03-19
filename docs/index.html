@@ -11,7 +11,7 @@
 
 <body>
 <script type="module">
-    import {fnapp, fnbind} from './fntags.js'
+    import {fnapp, fnbind, observeState} from './fntags.js'
     import {div, img, style} from './fnelements.js'
     import MenuBoard from "./MenuBoard.js";
     import {colors} from "./constants.js";
@@ -62,6 +62,11 @@
         `)
     )
 
+    observeState(authState, () => {
+        if (authState.isAuthenticated) loadData()
+    })
+    drive.init('601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com', "AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY")
+        .then(init)
     let loadingBlock = centeredBlock(loading(125));
     fnapp(document.body,
         fnbind(authState, () =>
@@ -94,10 +99,6 @@
                 loadingBlock
         )
     )
-
-    drive.init('601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com', "AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY")
-        .then(init)
-        .then(loadData)
 </script>
 </body>
 </html>
