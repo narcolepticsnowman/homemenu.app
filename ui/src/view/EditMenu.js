@@ -1,9 +1,9 @@
 import Modal from "./Modal.js";
-import {div, form, hr, img, input, span} from "./fnelements.js";
-import {fnbind, fnstate} from "./fntags.js";
-import {colors, toDayName, toMonthDay} from "./constants.js";
-import {currentWeek, getDishById, getDishNameIndex, getMenuPlanByDate, saveDish, saveMenuPlan} from './datastore.js'
-import autocomplete from "./autocomplete.js";
+import {div, form, hr, img, input, span} from "fnelements";
+import {fnbind, fnstate} from "fntags";
+import {colors, toDayName, toMonthDay} from "./api/constants.js";
+import {currentWeek, getDishById, getDishNameIndex, getMenuPlanByDate, saveDish, saveMenuPlan} from './api/datastore.js'
+import autocomplete from "./api/autocomplete.js";
 
 
 const emptyPlan = () => ({

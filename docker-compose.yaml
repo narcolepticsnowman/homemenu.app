@@ -1,0 +1,41 @@
+version: "3.7"
+
+services:
+  api:
+    build: api
+    logging:
+      options:
+        max-file: 8
+        max-size: 128m
+    env_file:
+      - ~/redis.env
+
+  ui:
+    build: ui
+    logging:
+      options:
+        max-file: 8
+        max-size: 128m
+    volumes:
+      - ./nginx.nginx:/etc/nginx/nginx.conf
+
+  nginx:
+    image: nginx:alpine
+    logging:
+      options:
+        max-file: 8
+        max-size: 128m
+    volumes:
+      - ./nginx.nginx:/etc/nginx/nginx.conf
+
+  redis:
+    build: redis
+#    logging:
+#      driver: json-file
+#      options:
+#        max-file: 5
+#        max-size: 128m
+    env_file:
+      - ~/redis.env
+#    volumes:
+#      - /redisdata:/data

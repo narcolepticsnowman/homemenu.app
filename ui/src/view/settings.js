@@ -1,6 +1,6 @@
-import {div, img, style} from "./fnelements.js";
-import {fnstate} from "./fntags.js";
-import {colors} from "./constants.js";
+import {div, img, style} from "fnelements";
+import {fnstate} from "fntags";
+import {colors} from "./api/constants.js";
 
 const settingsState = fnstate({isOpen: false})
 

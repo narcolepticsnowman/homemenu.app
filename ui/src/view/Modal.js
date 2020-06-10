@@ -1,5 +1,5 @@
-import {button, div, header, section} from "./fnelements.js";
-import {colors} from "./constants.js";
+import {button, div, header, section} from "fnelements";
+import {colors} from "./api/constants.js";
 
 export default ({content, onmounted, onclosed}) => {
 

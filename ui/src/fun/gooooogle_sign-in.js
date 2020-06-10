@@ -1,4 +1,4 @@
-import {fnstate} from "./fntags.js";
+import {fnstate} from "fntags";
 
 export const GoogleUser = fnstate({current: {}})
 

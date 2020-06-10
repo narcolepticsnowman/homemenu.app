@@ -1,5 +1,5 @@
-import {script} from "./fnelements.js";
-import {fnstate} from "./fntags.js";
+import {script} from "fnelements";
+import {fnstate} from "fntags";
 
 export const readyState = fnstate({ready: false})
 

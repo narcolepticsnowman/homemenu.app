@@ -1,10 +1,10 @@
-import {a, div, hr, img, section, span} from "./fnelements.js";
+import {a, div, hr, img, section, span} from "fnelements";
 import DishView from "./DishView.js";
-import {colors, humanTime, today, toDayName, toMonthDay} from "./constants.js";
-import {currentWeek, getDishById} from "./datastore.js";
+import {colors, humanTime, today, toDayName, toMonthDay} from "./api/constants.js";
+import {currentWeek, getDishById} from "./api/datastore.js";
 
 import EditMenu from "./EditMenu.js";
-import {fnbind, fnstate} from "./fntags.js";
+import {fnbind, fnstate} from "fntags";
 
 const dishView = DishView
 const editMenu = EditMenu

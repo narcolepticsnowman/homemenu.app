@@ -1,5 +1,5 @@
 
-import { h } from './fntags.js'
+import { h } from 'fntags'
 
 /**
  * @type {function(...[*]=): HTMLAnchorElement}

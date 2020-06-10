@@ -1,6 +1,6 @@
-import {div} from "./fnelements.js";
-import {colors, fixRange} from "./constants.js";
-import {fnbind, fnstate} from "./fntags.js";
+import {div} from "fnelements";
+import {colors, fixRange} from "./api/constants.js";
+import {fnbind, fnstate} from "fntags";
 
 export default (input) => {
     const valueState = fnstate({value: input.value && parseInt(input.value) || 0})

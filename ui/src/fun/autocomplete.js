@@ -1,5 +1,5 @@
-import {div, input, object} from "./fnelements.js";
-import {fnbind, fnstate} from "./fntags.js";
+import {div, input, object} from "fnelements";
+import {fnbind, fnstate} from "fntags";
 import {colors} from "./constants.js";
 
 

@@ -1,6 +1,6 @@
-import {a, div, hr, span, style} from "./fnelements.js";
+import {a, div, hr, span, style} from "fnelements";
 import Modal from "./Modal.js";
-import {colors, humanTime} from "./constants.js";
+import {colors, humanTime} from "./api/constants.js";
 
 document.head.append(style(`
     .prep-steps > div {

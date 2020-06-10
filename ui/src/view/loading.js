@@ -1,5 +1,5 @@
-import {div, span} from "./fnelements.js";
-import {colors} from "./constants.js";
+import {div, span} from "fnelements";
+import {colors} from "./api/constants.js";
 
 
 const makeDots = (i)=> span(

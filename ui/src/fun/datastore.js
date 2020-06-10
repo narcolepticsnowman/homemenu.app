@@ -1,5 +1,5 @@
 import drive from "./drivedb.js";
-import {fnstate} from "./fntags.js";
+import {fnstate} from "fntags";
 import {datePlusDays, today} from "./constants.js";
 
 export const datastoreState = fnstate({loaded: false})
