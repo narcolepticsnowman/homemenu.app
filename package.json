@@ -5,7 +5,6 @@
   "devDependencies": {
     "fs-extra": "8.1.0",
     "glob": "7.1.5",
-    "nodemon": "2.0.2",
     "terser": "4.3.9"
   },
   "dependencies": {
@@ -13,7 +12,7 @@
     "spliffy": "github:narcolepticsnowman/spliffy"
   },
   "scripts": {
-    "start:dev": "nodemon devserver.js",
+    "start:dev": "node devserver.js",
     "start": "www.js"
   },
   "nodemonConfig": {

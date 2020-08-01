@@ -1,11 +1,11 @@
-import {div, img, style} from "fnelements";
-import {fnstate} from "fntags";
-import {colors} from "./api/constants.js";
+import { div, img, style } from '../lib/fnelements.js'
+import { fnstate } from '../lib/fntags.js'
+import { colors } from '../fun/constants.js'
 
-const settingsState = fnstate({isOpen: false})
+const settingsState = fnstate( { isOpen: false } )
 
 document.body.append(
-    style(`
+    style( `
     .settings-panel-closed {
         display: none;
     }
@@ -19,18 +19,18 @@ document.body.append(
     .settings-btn-img-open {
         transform: rotate(180deg);
     }
-    `)
+    ` )
 )
 
 const settingsToggleButton = () => {
-    const btnImg = img({
-            style: {
-                height: '8vh',
-                'margin': '10px 0',
-            },
-            src: "./settings_open_slider.svg",
-            class: "settings-btn-closed"
-        }
+    const btnImg = img( {
+                            style: {
+                                height: '8vh',
+                                'margin': '10px 0'
+                            },
+                            src: '/images/settings_open_slider.svg',
+                            class: 'settings-btn-closed'
+                        }
     )
     const btn = div(
         {
@@ -38,14 +38,14 @@ const settingsToggleButton = () => {
             style: {
                 cursor: 'pointer',
                 background: 'linear-gradient(0, black, #00000073)',
-                'box-shadow': '-1px -1px 20px 1px '+colors.almostBlack
+                'box-shadow': '-1px -1px 20px 1px ' + colors.almostBlack
             },
             onclick: () => {
                 settingsState.isOpen = !settingsState.isOpen
-                btn.classList = settingsState.isOpen ? "settings-btn-open" : "settings-btn-closed"
-                settingsPage.classList = settingsState.isOpen ? "settings-page-open" : "settings-page-closed"
-                btnImg.classList = settingsState.isOpen ? "settings-btn-img-open" : "settings-btn-img-closed"
-                settingsPanel.classList = settingsState.isOpen ? "settings-panel-open" : "settings-panel-closed"
+                btn.classList = settingsState.isOpen ? 'settings-btn-open' : 'settings-btn-closed'
+                settingsPage.classList = settingsState.isOpen ? 'settings-page-open' : 'settings-page-closed'
+                btnImg.classList = settingsState.isOpen ? 'settings-btn-img-open' : 'settings-btn-img-closed'
+                settingsPanel.classList = settingsState.isOpen ? 'settings-panel-open' : 'settings-panel-closed'
             }
         },
         btnImg
@@ -61,9 +61,9 @@ let settingsPanel = div(
             height: '100%'
         }
     },
-    "Shared Menus",
-    "Dishes"
-);
+    'Shared Menus',
+    'Dishes'
+)
 const settingsPage = div(
     {
         class: 'settings-page-closed',

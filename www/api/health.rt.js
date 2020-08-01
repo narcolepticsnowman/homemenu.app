@@ -1,3 +1,3 @@
 module.exports = {
-    GET: ()=>'Ready to Cook!'
+    GET: () => 'Ready to Cook!'
 }

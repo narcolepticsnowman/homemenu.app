@@ -1,15 +1,15 @@
-import {fnapp, fnbind, observeState} from 'fntags'
-import {div, img, style} from 'fnelements'
-import MenuBoard from "./MenuBoard.js";
-import {colors} from "./api/constants.js";
-import settings from "./settings.js";
-import {authState, init, login} from "./api/gooooogle_sign-in.js";
-import {loadData, datastoreState} from "./api/datastore.js";
-import drive from "./api/drivedb.js";
-import loading from "./loading.js";
+import { fnapp, fnbind, observeState } from './lib/fntags.js'
+import { div, img, style } from './lib/fnelements.js'
+import MenuBoard from './view/MenuBoard.js'
+import { colors } from './fun/constants.js'
+import settings from './view/settings.js'
+import { authState, init, login } from './fun/gooooogle_sign-in.js'
+import { datastoreState, loadData } from './fun/datastore.js'
+import drive from './fun/drivedb.js'
+import loading from './view/loading.js'
 
 
-const centeredBlock = (...children) => div(
+const centeredBlock = ( ...children ) => div(
     {
         style: {
             display: 'flex',
@@ -23,9 +23,9 @@ const centeredBlock = (...children) => div(
 )
 
 document.head.append(
-    style(`
+    style( `
             body {
-                background-image: url(./chalkboardBackground.jpg);
+                background-image: url(/images/chalkboardBackground.jpg);
                 background-position: center;
                 background-size: cover;
                 min-height: 100vh;
@@ -46,7 +46,7 @@ document.head.append(
                 padding: 10px;
                 font-family: radium;
             }
-        `)
+        ` )
 )
 
 observeState(authState, () => {
@@ -79,7 +79,7 @@ fnapp(document.body,
                                     :
           centeredBlock(
               div({style: {'font-size': '4vh', color: colors.orange}}, "Menu Board"),
-              img({src: "./google_sign_in_btn.png", style: {cursor: 'pointer'}, onclick: () => login()})
+              img({src: "/images/google_sign_in_btn.png", style: {cursor: 'pointer'}, onclick: () => login()})
           )
                              :
 
