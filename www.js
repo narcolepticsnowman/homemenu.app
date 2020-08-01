@@ -3,6 +3,7 @@ env = process.env.DEPLOY_MODE || 'dev'
 const authFilter = require( './src/filters/google_oauth.js' )
 require( 'spliffy' )(
     {
+        port: 80,
         routeDir: __dirname + '/www',
         cacheStatic: true,
         filters: [ authFilter ],

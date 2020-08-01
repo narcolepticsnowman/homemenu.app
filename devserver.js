@@ -1,7 +1,7 @@
 require( 'spliffy' )(
     {
-        port: 8000,
-        routeDir: __dirname + '/dist',
+        port: 80,
+        routeDir: __dirname + '/www',
         staticMode: true,
         notFoundRoute: '/',
         watchFiles: true

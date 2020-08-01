@@ -1,41 +1,48 @@
 version: "3.7"
 
 services:
-  api:
-    build: api
-    logging:
-      options:
-        max-file: 8
-        max-size: 128m
+  app:
+    build: .
     env_file:
-      - ~/redis.env
+      - ~/homemenu.env
 
-  ui:
-    build: ui
-    logging:
-      options:
-        max-file: 8
-        max-size: 128m
+  pd0:
+    image: pingcap/pd:latest
+    ports:
+      - "2379"
     volumes:
-      - ./nginx.nginx:/etc/nginx/nginx.conf
-
-  nginx:
-    image: nginx:alpine
-    logging:
-      options:
-        max-file: 8
-        max-size: 128m
+      - ./conf/pd.toml:/pd.toml:ro
+      - ./sitedata:/sitedata
+    command:
+      - --name=pd0
+      - --advertise-client-urls=http://pd0:2379
+      - --advertise-peer-urls=http://pd0:2380
+      - --initial-cluster=pd0=http://pd0:2380
+      - --config=/pd.toml
+    restart: on-failure
+  tikv0:
+    image: pingcap/tikv:latest
     volumes:
-      - ./nginx.nginx:/etc/nginx/nginx.conf
-
-  redis:
-    build: redis
-#    logging:
-#      driver: json-file
-#      options:
-#        max-file: 5
-#        max-size: 128m
-    env_file:
-      - ~/redis.env
-#    volumes:
-#      - /redisdata:/data
+      - ./conf/tikv.toml:/tikv.toml:ro
+      - ./sitedata:/sitedata
+    command:
+      - --advertise-addr=tikv0:20160
+      - --data-dir=/data/tikv0
+      - --pd=pd0:2379
+      - --config=/tikv.toml
+    depends_on:
+      - "pd0"
+    restart: on-failure
+  titan:
+    image: distributedio/titan
+    volumes:
+      - ./conf/titan.toml:/titan.toml:ro
+    ports:
+      - "7369:7369"
+      - "7345:7345"
+    command:
+      - --pd-addrs=tikv://pd0:2379
+      - -c=/titan.toml
+    depends_on:
+      - "tikv0"
+    restart: on-failure

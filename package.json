@@ -1,0 +1,27 @@
+{
+  "name": "ui",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "fs-extra": "8.1.0",
+    "glob": "7.1.5",
+    "nodemon": "2.0.2",
+    "terser": "4.3.9"
+  },
+  "dependencies": {
+    "redish": "github:narcolepticsnowman/redish",
+    "spliffy": "github:narcolepticsnowman/spliffy"
+  },
+  "scripts": {
+    "start:dev": "nodemon devserver.js",
+    "start": "www.js"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "src"
+    ],
+    "events": {
+      "restart": "npm run build-dev"
+    }
+  }
+}
