@@ -166,14 +166,14 @@ const upcomingMenuItem = ( plan, dishes ) =>
 
 const menuItem = ( plan ) => {
     let planDate = new Date( plan.date )
-    const planDishes = fnstate( { list: [] } )
+    const planDishes = fnstate( [] )
     Promise.all( plan.dishIds.map( getDishById ) )
            .then( dishes => {
-               planDishes.list = dishes
+               planDishes(dishes)
            } )
 
     let isToday = planDate.getTime() === today().getTime()
-    return isToday ? fnbind( planDishes, () => todayMenuItem( plan, planDishes.list ) ) : fnbind( planDishes, () => upcomingMenuItem( plan, planDishes.list ) )
+    return isToday ? fnbind( planDishes, () => todayMenuItem( plan, planDishes() ) ) : fnbind( planDishes, () => upcomingMenuItem( plan, planDishes() ) )
 }
 
 export default () => fnbind( currentWeek, () => section(

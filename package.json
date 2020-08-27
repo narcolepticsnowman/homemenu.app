@@ -8,8 +8,8 @@
     "terser": "4.3.9"
   },
   "dependencies": {
-    "redish": "github:narcolepticsnowman/redish",
-    "spliffy": "github:narcolepticsnowman/spliffy"
+    "redish": "0.0.6",
+    "spliffy": "^4.5.0"
   },
   "scripts": {
     "start:dev": "node devserver.js",

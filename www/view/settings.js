@@ -2,7 +2,7 @@ import { div, img, style } from '../lib/fnelements.js'
 import { fnstate } from '../lib/fntags.js'
 import { colors } from '../fun/constants.js'
 
-const settingsState = fnstate( { isOpen: false } )
+const settingsOpen = fnstate( false )
 
 document.body.append(
     style( `
@@ -41,11 +41,11 @@ const settingsToggleButton = () => {
                 'box-shadow': '-1px -1px 20px 1px ' + colors.almostBlack
             },
             onclick: () => {
-                settingsState.isOpen = !settingsState.isOpen
-                btn.classList = settingsState.isOpen ? 'settings-btn-open' : 'settings-btn-closed'
-                settingsPage.classList = settingsState.isOpen ? 'settings-page-open' : 'settings-page-closed'
-                btnImg.classList = settingsState.isOpen ? 'settings-btn-img-open' : 'settings-btn-img-closed'
-                settingsPanel.classList = settingsState.isOpen ? 'settings-panel-open' : 'settings-panel-closed'
+                settingsOpen(!settingsOpen())
+                btn.classList = settingsOpen() ? 'settings-btn-open' : 'settings-btn-closed'
+                settingsPage.classList = settingsOpen() ? 'settings-page-open' : 'settings-page-closed'
+                btnImg.classList = settingsOpen() ? 'settings-btn-img-open' : 'settings-btn-img-closed'
+                settingsPanel.classList = settingsOpen() ? 'settings-panel-open' : 'settings-panel-closed'
             }
         },
         btnImg

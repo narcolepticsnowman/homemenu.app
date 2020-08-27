@@ -5,44 +5,11 @@ services:
     build: .
     env_file:
       - ~/homemenu.env
-
-  pd0:
-    image: pingcap/pd:latest
+  ardb:
+    image: lupino/ardb-server
     ports:
-      - "2379"
+      - "16379:16379"
     volumes:
-      - ./conf/pd.toml:/pd.toml:ro
-      - ./sitedata:/sitedata
-    command:
-      - --name=pd0
-      - --advertise-client-urls=http://pd0:2379
-      - --advertise-peer-urls=http://pd0:2380
-      - --initial-cluster=pd0=http://pd0:2380
-      - --config=/pd.toml
-    restart: on-failure
-  tikv0:
-    image: pingcap/tikv:latest
-    volumes:
-      - ./conf/tikv.toml:/tikv.toml:ro
-      - ./sitedata:/sitedata
-    command:
-      - --advertise-addr=tikv0:20160
-      - --data-dir=/data/tikv0
-      - --pd=pd0:2379
-      - --config=/tikv.toml
-    depends_on:
-      - "pd0"
-    restart: on-failure
-  titan:
-    image: distributedio/titan
-    volumes:
-      - ./conf/titan.toml:/titan.toml:ro
-    ports:
-      - "7369:7369"
-      - "7345:7345"
-    command:
-      - --pd-addrs=tikv://pd0:2379
-      - -c=/titan.toml
-    depends_on:
-      - "tikv0"
-    restart: on-failure
+      - ./conf/ardb.conf:/etc/ardb.conf:ro
+      - /data:/data
+      - /backup:/backup

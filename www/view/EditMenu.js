@@ -11,18 +11,18 @@ const emptyPlan = () => ( {
     dishIds: []
 } )
 
-let menuPlan = fnstate( { current: emptyPlan() } )
+let menuPlan = fnstate( emptyPlan() )
 
-const menuDishes = fnstate( { list: [] } )
+const menuDishes = fnstate( [] )
 
 const driveId = ( o ) => o && o.driveMeta && o.driveMeta.id || null
 
 const addDish = ( dish ) =>
-    menuDishes.list = menuDishes.list.filter( d => driveId( d ) !== driveId( dish ) ).concat( dish )
+    menuDishes(menuDishes().filter( d => driveId( d ) !== driveId( dish ) ).concat( dish ))
 
 
 const removeDish = ( i ) =>
-    menuDishes.list = menuDishes.list.filter( ( o, j ) => i !== j )
+    menuDishes(menuDishes().filter( ( o, j ) => i !== j ))
 
 
 const dishInput = ( placeholder, newDish, prop, type = 'text' ) =>
@@ -106,10 +106,10 @@ const save = async( close ) => {
     try {
         //TODO show loading spinner
         Promise.all( dishSavePromises ).then( () => {
-            menuPlan.current.dishIds = menuDishes.list.map( d => driveId( d ) )
-            saveMenuPlan( menuPlan.current ).then( saved => {
-                menuDishes.list = []
-                menuPlan.current = emptyPlan()
+            menuPlan().dishIds = menuDishes().map( d => driveId( d ) )
+            saveMenuPlan( menuPlan() ).then( saved => {
+                menuDishes([])
+                menuPlan(emptyPlan())
                 currentWeek.list = currentWeek.list.map( p => p.date === saved.date ? saved : p )
                 submitting = false
                 close()
@@ -130,11 +130,11 @@ const save = async( close ) => {
 const EditMenu = Modal( {
                             content: ( planDate, close ) => {
                                 if( planDate ) getMenuPlanByDate( planDate ).then( plan => {
-                                                                                menuPlan.current = plan
+                                                                                menuPlan(plan)
                                                                                 return Promise.all( plan.dishIds.map( id => getDishById( id ) ) )
                                                                             } )
                                                                             .then( dishes => {
-                                                                                menuDishes.list = dishes
+                                                                                menuDishes(dishes)
                                                                             } )
                                 return fnbind( menuPlan, () => div(
                                     form(
@@ -158,14 +158,14 @@ const EditMenu = Modal( {
                                                          'justify-content': 'space-between'
                                                      }
                                                  },
-                                                 div( toDayName( menuPlan.current.date ) ),
-                                                 div( toMonthDay( menuPlan.current.date ) )
+                                                 div( toDayName( menuPlan().date ) ),
+                                                 div( toMonthDay( menuPlan().date ) )
                                              ),
                                              img( { src: '/images/border.svg', style: { width: '70%' } } )
                                         ),
                                         div(
                                             fnbind( menuDishes, () => div(
-                                                menuDishes.list.map( ( dish, i ) =>
+                                                menuDishes().map( ( dish, i ) =>
                                                                          driveId( dish )
                                                                          ? existingDish( dish, i )
                                                                          : dishForm( dish, i )
@@ -197,7 +197,7 @@ const EditMenu = Modal( {
                                                                   placeholder: 'Find Dish',
                                                                   resultClickHandler: async( e, match ) => {
                                                                       let dish = await getDishById( match.id )
-                                                                      menuDishes.list = menuDishes.list.concat( dish )
+                                                                      menuDishes(menuDishes().concat( dish ))
                                                                   }
                                                               } ),
                                                 span(
@@ -214,7 +214,7 @@ const EditMenu = Modal( {
                                                             cursor: 'pointer'
                                                         },
                                                         onclick: () => {
-                                                            menuDishes.list = menuDishes.list.concat( {} )
+                                                            menuDishes(menuDishes().concat( {} ))
                                                         }
                                                     },
                                                     'New Dish'

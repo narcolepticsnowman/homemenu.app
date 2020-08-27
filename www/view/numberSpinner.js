@@ -3,13 +3,13 @@ import { colors, fixRange } from '../fun/constants.js'
 import { fnbind, fnstate } from '../lib/fntags.js'
 
 export default ( input ) => {
-    const valueState = fnstate( { value: input.value && parseInt( input.value ) || 0 } )
+    const valueState = fnstate( input.value && parseInt( input.value ) || 0 )
 
 
     const ogOnchange = input.onchange
     input.onchange = ( e ) => {
         fixRange( e.target, input.getAttribute( 'min' ), input.getAttribute( 'max' ) )
-        valueState.value = parseInt( e.target.value )
+        valueState(parseInt( e.target.value ))
         ogOnchange( e )
     }
     // input.style.setProperty()
@@ -20,7 +20,7 @@ export default ( input ) => {
                 display: 'inline-flex'
             }
         },
-        fnbind( valueState, input, () => input.value = valueState.value ),
+        fnbind( valueState, input, () => input.value = valueState() ),
         div( {
                  style: {
                      display: 'flex',
@@ -29,11 +29,11 @@ export default ( input ) => {
                  }
              },
              div( {
-                      onclick: () => valueState.value++
+                      onclick: () => valueState.patch({value: valueState().value++})
                   }, '\u25B2' ),
              div(
                  {
-                     onclick: () => valueState.value--
+                     onclick: () => valueState.patch({value: valueState().value--})
                  },
                  '\u25BC' )
         )
