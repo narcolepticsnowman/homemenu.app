@@ -1,4 +1,4 @@
-const db = require( '../../../../../fun/db/db.js' )
+const db = require( '../../../../../db/db.js' )
 module.exports = {
     GET: async ({url:{pathParameters: {chefId}, query:{page, size, date}}}) => {
         if(date){
@@ -7,5 +7,7 @@ module.exports = {
         } else{
             await db.getMenus(chefId, page, size)
         }
-    }
+    },
+    POST: async( { url: { pathParameters: { chefId } }, body: menu } ) =>
+        await db.saveMenu( chefId, menu )
 }

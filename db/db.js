@@ -1,6 +1,7 @@
-const redis = require( 'redish' )
-const client = redis.createClient()
 const redish = require( 'redish' )
+const redis = require( 'redis' )
+const client = redis.createClient( {host: 'ardb', port: 16379} )
+// client.auth("90d959b7-03b1-43f7-8f55-8ea716a29b2f", console.log)
 const db = redish.createDb( client )
 
 client.on( 'error', function( error ) {
@@ -27,6 +28,8 @@ const menuId = ( chefId, msDate ) => chefId + '-menu-' + msDate
 const menuKey = ( chefId ) => chefId + '-menu'
 const recipeKey = ( recipe ) => recipe + '-recipe'
 
+
+//TODO add schema validation with js-schema on the frontend and backend
 
 const getMenusByDate = async( chefId, dates ) => await Promise.all( dates.map( dt => getMenu( chefId, dt ) ) )
 const getMenus = async( chefId, page, size ) => await db.findAll(menuKey(chefId), page, size)

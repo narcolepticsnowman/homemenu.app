@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 env = process.env.DEPLOY_MODE || 'dev'
-const authFilter = require( './src/filters/google_oauth.js' )
+const authFilter = require( './filters/google_oauth.js' )
 require( 'spliffy' )(
     {
         port: 80,

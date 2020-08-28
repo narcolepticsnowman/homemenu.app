@@ -3,6 +3,8 @@ version: "3.7"
 services:
   app:
     build: .
+    ports:
+      - "80:80"
     env_file:
       - ~/homemenu.env
   ardb:
@@ -11,5 +13,5 @@ services:
       - "16379:16379"
     volumes:
       - ./conf/ardb.conf:/etc/ardb.conf:ro
-      - /data:/data
-      - /backup:/backup
+      - ./data:/data
+      - ./backup:/backup

@@ -8,8 +8,10 @@
     "terser": "4.3.9"
   },
   "dependencies": {
-    "redish": "0.0.6",
-    "spliffy": "^4.5.0"
+    "redish": "0.0.7",
+    "redis": "3.0.2",
+    "js-schema": "1.0.1",
+    "spliffy": "4.5.1"
   },
   "scripts": {
     "start:dev": "node devserver.js",

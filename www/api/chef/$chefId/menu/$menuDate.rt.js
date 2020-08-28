@@ -1,4 +1,4 @@
-const db = require( '../../../../../fun/db/db.js' )
+const db = require( '../../../../../db/db.js' )
 module.exports = {
     GET: async( { url: { pathParameters: { chefId, menuDate } } } ) =>
         await db.getMenu( chefId, menuDate )

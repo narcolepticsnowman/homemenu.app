@@ -5,22 +5,11 @@ import { datePlusDays, today } from './constants.js'
 export const datastoreState = fnstate( { loaded: false } )
 export const currentWeek = fnstate( { list: [] } )
 
-const appFolderName = 'menu-plan.web.app_menu-data'
-const menuPlanFolderName = 'menu-plan'
-const dishFolderName = 'dish'
-const menuPlanKeyPrefix = 'menu-plan.web.app_menu-plan-'
+const appFolderName = 'menu-menu.web.app_menu-data'
+const menuFolderName = 'menu-menu'
+const recipeFolderName = 'recipe'
+const menuKeyPrefix = 'menu-menu.web.app_menu-menu-'
 
-const getFolderId = async( name, parent = null ) =>
-    getCachedObject(
-        {
-            storage: localStorage,
-            key: name + '_folder-id',
-            loadValue: async() => {
-                let folder = await drive.getOrCreateFolder( name, parent )
-                return folder.id
-            }
-        }
-    )
 
 const getCachedObject = async( { storage, key, loadValue, isValid } ) => {
     let cached = storage.getItem( key )
@@ -41,131 +30,95 @@ const getCachedObject = async( { storage, key, loadValue, isValid } ) => {
     }
 }
 
-const getMenuPlansAround = async( date ) => {
+const getMenusAround = async( date ) => {
     const startDate = new Date( date )
     startDate.setHours( 0, 0, 0, 0 )
     startDate.setDate( startDate.getDate() - 3 )
     return await Promise.all( [ ...new Array( 7 ).keys() ]
                                   .map( i => datePlusDays( startDate, i ) )
-                                  .map( getMenuPlanByDate )
+                                  .map( getMenuByDate )
     )
 }
 
-export const getDishFolderId = async() => await getFolderId( dishFolderName, await getAppFolderId() )
-export const getMenuPlanFolderId = async() => await getFolderId( menuPlanFolderName, await getAppFolderId() )
+export const getRecipeFolderId = async() => await getFolderId( recipeFolderName, await getAppFolderId() )
+export const getMenuFolderId = async() => await getFolderId( menuFolderName, await getAppFolderId() )
 
 //TODO handle shared folders
 export const getAppFolderId = async() => await getFolderId( appFolderName )
 
 export const loadData = async() => {
     if( !datastoreState.loaded ) {
-        currentWeek.list = await getMenuPlansAround( today() )
+        currentWeek.list = await getMenusAround( today() )
         datastoreState.loaded = true
     }
 }
 
-export const getDishById = async( id ) => await getCachedObject(
+export const getRecipeById = async( id ) => await getCachedObject(
     {
         storage: sessionStorage,
-        key: 'dish_' + id,
+        key: 'recipe_' + id,
         loadValue: async() => await drive.loadObject( id )
     }
 )
 
-export const getMenuPlanByDate = async( msDate ) => await getCachedObject(
+export const getMenuByDate = async( msDate ) => await getCachedObject(
     {
         storage: sessionStorage,
-        key: menuPlanKeyPrefix + msDate,
+        key: menuKeyPrefix + msDate,
         loadValue: async() => {
-            let files = await drive.findFiles( { name: msDate, folderId: await getMenuPlanFolderId() } )
-            let menuPlan
+            let files = await drive.findFiles( { name: msDate, folderId: await getMenuFolderId() } )
+            let menu
             if( files && files.length > 0 ) {
-                menuPlan = await drive.loadObject( files[ 0 ].id )
+                menu = await drive.loadObject( files[ 0 ].id )
             } else {
-                menuPlan = { date: msDate, dishIds: [] }
+                menu = { date: msDate, recipeIds: [] }
             }
-            return menuPlan
+            return menu
         }
     }
 )
 
-export const saveDish = async( dish ) => {
-    if( !dish.driveMeta ) {
-        dish.driveMeta = {
-            name: dish.name,
-            folderId: await getDishFolderId()
+export const saveRecipe = async( recipe ) => {
+    if( !recipe.driveMeta ) {
+        recipe.driveMeta = {
+            name: recipe.name,
+            folderId: await getRecipeFolderId()
         }
     }
-    let saved = await drive.save( dish )
-    await addDishNameToIndex( { id: saved.id, name: dish.name } )
-    sessionStorage.setItem( 'dish_' + dish.driveMeta.id, JSON.stringify( dish ) )
-    return dish
+    let saved = await drive.save( recipe )
+    await addRecipeNameToIndex( { id: saved.id, name: recipe.name } )
+    sessionStorage.setItem( 'recipe_' + recipe.driveMeta.id, JSON.stringify( recipe ) )
+    return recipe
 }
 
-export const saveMenuPlan = async( menuPlan ) => {
-    if( !menuPlan.driveMeta ) {
-        menuPlan.driveMeta = {
-            name: menuPlan.date,
-            folderId: await getMenuPlanFolderId()
-        }
-    }
-    let currentIndex = currentWeek.list.findIndex( plan => plan.date === menuPlan.date )
-    if( currentIndex > -1 ) {
-        let oldPlan = currentWeek.list[ currentIndex ]
-        currentWeek.list = currentWeek.list.map( p => p.date === menuPlan.date ? oldPlan : p )
-    }
-    try {
-        await drive.save( menuPlan )
+export const saveMenu = async( menu ) => {
+    currentWeek.list = currentWeek.list.map( p => p.date === menu.date ? menu : p )
 
-        sessionStorage.setItem( menuPlanKeyPrefix + menuPlan.date, JSON.stringify( menuPlan ) )
-        return menuPlan
+    try {
+        //TODO use the logged in users id
+        let saved = await fetch( '/api/chef/123/menu', {
+            method: 'POST',
+            body: JSON.stringify(menu)
+        } )
+
+        sessionStorage.setItem( menuKeyPrefix + saved.date, JSON.stringify( saved ) )
+        return saved
     } catch(e) {
-        alert( 'Failed to save menu plan changes' )
-        currentWeek.list = currentWeek.list.map( p => p.date === menuPlan.date ? menuPlan : p )
+        alert( 'Failed to save menu menu changes' )
+        currentWeek.list = currentWeek.list.map( p => p.date === menu.date ? menu : p )
         throw e
     }
 }
 
-const addDishNameToIndex = async( { id, name } ) => {
-    let dishNameIndex = await getDishNameIndex()
-    dishNameIndex.index[ id ] = name
-    await drive.save( dishNameIndex )
-    localStorage.setItem( 'dish-name-index_' + await getDishFolderId(), JSON.stringify( dishNameIndex ) )
+const addRecipeNameToIndex = async( { id, name } ) => {
+    // let recipeNameIndex = await getRecipeNameIndex()
+    // recipeNameIndex.index[ id ] = name
+    // await drive.save( recipeNameIndex )
+    // localStorage.setItem( 'recipe-name-index_' + await getRecipeFolderId(), JSON.stringify( recipeNameIndex ) )
 }
 
-let dishNameLastUpdate = -1
+let recipeNameLastUpdate = -1
 
-export const getDishNameIndex = async() => await getCachedObject(
-    {
-        storage: localStorage,
-        key: 'dish-name-index_' + await getDishFolderId(),
-        loadValue: async() => {
-            let fileName = 'dish-name-index'
-            let files = await drive.findFiles( { name: fileName, folderId: await getDishFolderId() } )
-            let dishNames
-            if( files && files.length > 0 ) {
-                dishNames = await drive.loadObject( files[ 0 ].id )
-            } else {
-                //TODO check for existing dishes and include them in the index
-                //TODO provide way to search shared folders
-                dishNames = {
-                    driveMeta: {
-                        name: fileName,
-                        folderId: await getDishFolderId()
-                    },
-                    index: {}
-                }
-                await drive.save( dishNames )
-            }
-            return dishNames
-        },
-        isValid: async( stored ) => {
-            if( dishNameLastUpdate === -1 ) {
-                dishNameLastUpdate = -2
-                let fileInfo = await drive.getFileMeta( stored.driveMeta.id )
-                dishNameLastUpdate = Date.parse( fileInfo.modifiedTime )
-            }
-            return stored.driveMeta.appProperties.lastUpdated < dishNameLastUpdate
-        }
-    }
-)
+//TODO implement autocomplete using rerecipe
+//https://redislabs.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-1-autocomplete/6-1-2-address-book-autocomplete/
+export const getRecipeNameIndex = async() => []

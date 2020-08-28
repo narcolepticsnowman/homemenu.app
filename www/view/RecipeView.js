@@ -67,16 +67,16 @@ const prepSteps = ( steps ) => div(
 
 export default Modal(
     {
-        content: ( dish ) => [ div( {
+        content: ( recipe ) => [ div( {
                                         style: {
                                             'font-size': '6vh',
                                             color: colors.orange,
                                             'margin-bottom': '5px'
                                         }
                                     },
-                                    dish.name
+                                    recipe.name
         ),
-            dish.cookTime > 0 ? div(
+            recipe.cookTime > 0 ? div(
                 {
                     style: {
                         'text-align': 'center',
@@ -92,9 +92,9 @@ export default Modal(
                                                     style: {
                                                         color: colors.green
                                                     }
-                                                }, humanTime( dish.cookTime ) )
+                                                }, humanTime( recipe.cookTime ) )
             ) : '',
-            dish.recipeUrl ?
+            recipe.recipeUrl ?
             div( {
                      style: {
                          'font-size': '4vh',
@@ -107,12 +107,12 @@ export default Modal(
                                     style: {
                                         color: colors.green
                                     },
-                                    href: dish.recipeUrl,
-                                    title: dish.recipeUrl
-                                }, dish.recipeUrl.split( '//' )[ 1 ].substr( 0, 20 ), '...' ) )
+                                    href: recipe.recipeUrl,
+                                    title: recipe.recipeUrl
+                                }, recipe.recipeUrl.split( '//' )[ 1 ].substr( 0, 20 ), '...' ) )
                            : '',
             hr( { style: { color: colors.offWhite, margin: '8px' } } ),
-            dish.prepSteps && dish.prepSteps.length > 0 ? prepSteps( dish.prepSteps ) : ''
+            recipe.prepSteps && recipe.prepSteps.length > 0 ? prepSteps( recipe.prepSteps ) : ''
         ]
     }
 )

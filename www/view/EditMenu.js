@@ -2,30 +2,30 @@ import Modal from './Modal.js'
 import { div, form, hr, img, input, span } from '../lib/fnelements.js'
 import { fnbind, fnstate } from '../lib/fntags.js'
 import { colors, toDayName, toMonthDay } from '../fun/constants.js'
-import { currentWeek, getDishById, getDishNameIndex, getMenuPlanByDate, saveDish, saveMenuPlan } from '../fun/datastore.js'
+import { currentWeek, getRecipeById, getRecipeNameIndex, getMenuByDate, saveRecipe, saveMenu } from '../fun/datastore.js'
 import autocomplete from '../fun/autocomplete.js'
 
 
-const emptyPlan = () => ( {
+const emptyMenu = () => ( {
     date: 0,
-    dishIds: []
+    recipeIds: []
 } )
 
-let menuPlan = fnstate( emptyPlan() )
+let menu = fnstate( emptyMenu() )
 
-const menuDishes = fnstate( [] )
+const menuRecipees = fnstate( [] )
 
 const driveId = ( o ) => o && o.driveMeta && o.driveMeta.id || null
 
-const addDish = ( dish ) =>
-    menuDishes(menuDishes().filter( d => driveId( d ) !== driveId( dish ) ).concat( dish ))
+const addRecipe = ( recipe ) =>
+    menuRecipees(menuRecipees().filter( d => driveId( d ) !== driveId( recipe ) ).concat( recipe ))
 
 
-const removeDish = ( i ) =>
-    menuDishes(menuDishes().filter( ( o, j ) => i !== j ))
+const removeRecipe = ( i ) =>
+    menuRecipees(menuRecipees().filter( ( o, j ) => i !== j ))
 
 
-const dishInput = ( placeholder, newDish, prop, type = 'text' ) =>
+const recipeInput = ( placeholder, newRecipe, prop, type = 'text' ) =>
     div(
         input( {
                    style: {
@@ -35,23 +35,23 @@ const dishInput = ( placeholder, newDish, prop, type = 'text' ) =>
                        width: '60%',
                        'margin-bottom': '15px'
                    },
-                   value: newDish[ prop ] || '',
+                   value: newRecipe[ prop ] || '',
                    onchange: ( e ) => {
-                       newDish[ prop ] = e.target.value
+                       newRecipe[ prop ] = e.target.value
                    },
                    placeholder
                } )
     )
 
-let dishSavePromises = []
+let recipeSavePromises = []
 
-const dishForm = ( dish, i ) =>
+const recipeForm = ( recipe, i ) =>
     form( {
               onsubmit: ( e ) => e.preventDefault()
           },
-          dishInput( 'Name', dish, 'name' ),
-          dishInput( 'Link', dish, 'recipeUrl' ),
-          dishInput( 'Cook Time', dish, 'cookTime', 'number' ),
+          recipeInput( 'Name', recipe, 'name' ),
+          recipeInput( 'Link', recipe, 'recipeUrl' ),
+          recipeInput( 'Cook Time', recipe, 'cookTime', 'number' ),
           div(
               {
                   style: {
@@ -66,35 +66,35 @@ const dishForm = ( dish, i ) =>
               span( {
                         style: { cursor: 'pointer' }, onclick: () => {
                       //TODO show loading spinner
-                      let dishSave = saveDish( dish )
-                      dishSavePromises.push( dishSave )
-                      dishSave.then( ( saved ) => {
-                          removeDish( i )
-                          addDish( saved )
+                      let recipeSave = saveRecipe( recipe )
+                      recipeSavePromises.push( recipeSave )
+                      recipeSave.then( ( saved ) => {
+                          removeRecipe( i )
+                          addRecipe( saved )
                       } ).catch( ( e ) => {
                           console.error( e )
-                          addDish( dish )
+                          addRecipe( recipe )
                       } )
                   }
                     }, 'Save' ),
               span( {
                         style: { cursor: 'pointer' }, onclick: () => {
-                      removeDish( i )
+                      removeRecipe( i )
                   }
                     }, 'Cancel' )
           ),
           hr()
     )
 
-const existingDish = ( dish, i ) => div(
-    span( { style: { color: colors.orange, 'font-size': '3vh' } }, dish.name ),
+const existingRecipe = ( recipe, i ) => div(
+    span( { style: { color: colors.orange, 'font-size': '3vh' } }, recipe.name ),
     span( {
               style: {
                   color: colors.offWhite,
                   cursor: 'pointer',
                   margin: '0 10px'
               },
-              onclick: () => removeDish( i )
+              onclick: () => removeRecipe( i )
           }, 'X' )
 )
 
@@ -105,11 +105,11 @@ const save = async( close ) => {
     submitting = true
     try {
         //TODO show loading spinner
-        Promise.all( dishSavePromises ).then( () => {
-            menuPlan().dishIds = menuDishes().map( d => driveId( d ) )
-            saveMenuPlan( menuPlan() ).then( saved => {
-                menuDishes([])
-                menuPlan(emptyPlan())
+        Promise.all( recipeSavePromises ).then( () => {
+            menu().recipeIds = menuRecipees().map( d => driveId( d ) )
+            saveMenu( menu() ).then( saved => {
+                menuRecipees([])
+                menu(emptyMenu())
                 currentWeek.list = currentWeek.list.map( p => p.date === saved.date ? saved : p )
                 submitting = false
                 close()
@@ -128,15 +128,15 @@ const save = async( close ) => {
 }
 
 const EditMenu = Modal( {
-                            content: ( planDate, close ) => {
-                                if( planDate ) getMenuPlanByDate( planDate ).then( plan => {
-                                                                                menuPlan(plan)
-                                                                                return Promise.all( plan.dishIds.map( id => getDishById( id ) ) )
+                            content: ( menuDate, close ) => {
+                                if( menuDate ) getMenuByDate( menuDate ).then( menu => {
+                                                                                menu(menu)
+                                                                                return Promise.all( menu.recipeIds.map( id => getRecipeById( id ) ) )
                                                                             } )
-                                                                            .then( dishes => {
-                                                                                menuDishes(dishes)
+                                                                            .then( recipees => {
+                                                                                menuRecipees(recipees)
                                                                             } )
-                                return fnbind( menuPlan, () => div(
+                                return fnbind( menu, () => div(
                                     form(
                                         {
                                             onsubmit: ( e ) => e.preventDefault()
@@ -158,17 +158,17 @@ const EditMenu = Modal( {
                                                          'justify-content': 'space-between'
                                                      }
                                                  },
-                                                 div( toDayName( menuPlan().date ) ),
-                                                 div( toMonthDay( menuPlan().date ) )
+                                                 div( toDayName( menu().date ) ),
+                                                 div( toMonthDay( menu().date ) )
                                              ),
                                              img( { src: '/images/border.svg', style: { width: '70%' } } )
                                         ),
                                         div(
-                                            fnbind( menuDishes, () => div(
-                                                menuDishes().map( ( dish, i ) =>
-                                                                         driveId( dish )
-                                                                         ? existingDish( dish, i )
-                                                                         : dishForm( dish, i )
+                                            fnbind( menuRecipees, () => div(
+                                                menuRecipees().map( ( recipe, i ) =>
+                                                                         driveId( recipe )
+                                                                         ? existingRecipe( recipe, i )
+                                                                         : recipeForm( recipe, i )
                                                 )
                                             ) ),
                                             img( { src: '/images/border.svg', style: { width: '60%', transform: 'scaleY(-1)' } } ),
@@ -189,15 +189,15 @@ const EditMenu = Modal( {
                                                                       'text-align': 'center'
                                                                   },
                                                                   data: async() => {
-                                                                      let index = ( await getDishNameIndex() ).index
+                                                                      let index = ( await getRecipeNameIndex() ).index
                                                                       return [ ...Object.keys( index ) ].map( id => ( { id, name: index[ id ] } ) )
                                                                   },
                                                                   displayProperty: 'name',
-                                                                  stringMappers: [ ( dish ) => dish.name, ( dish ) => dish.recipeUrl ],
-                                                                  placeholder: 'Find Dish',
+                                                                  stringMappers: [ ( recipe ) => recipe.name, ( recipe ) => recipe.recipeUrl ],
+                                                                  placeholder: 'Find Recipe',
                                                                   resultClickHandler: async( e, match ) => {
-                                                                      let dish = await getDishById( match.id )
-                                                                      menuDishes(menuDishes().concat( dish ))
+                                                                      let recipe = await getRecipeById( match.id )
+                                                                      menuRecipees(menuRecipees().concat( recipe ))
                                                                   }
                                                               } ),
                                                 span(
@@ -214,10 +214,10 @@ const EditMenu = Modal( {
                                                             cursor: 'pointer'
                                                         },
                                                         onclick: () => {
-                                                            menuDishes(menuDishes().concat( {} ))
+                                                            menuRecipees(menuRecipees().concat( {} ))
                                                         }
                                                     },
-                                                    'New Dish'
+                                                    'New Recipe'
                                                 )
                                             )
                                         ),

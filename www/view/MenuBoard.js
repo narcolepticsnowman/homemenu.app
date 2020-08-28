@@ -1,26 +1,26 @@
 import { a, div, hr, img, section, span } from '../lib/fnelements.js'
-import DishView from './DishView.js'
+import RecipeView from './RecipeView.js'
 import { colors, humanTime, today, toDayName } from '../fun/constants.js'
-import { currentWeek, getDishById } from '../fun/datastore.js'
+import { currentWeek, getRecipeById } from '../fun/datastore.js'
 
 import EditMenu from './EditMenu.js'
 import { fnbind, fnstate } from '../lib/fntags.js'
 
-const dishView = DishView
+const recipeView = RecipeView
 const editMenu = EditMenu
-const dishModalLink = ( dish ) => {
+const recipeModalLink = ( recipe ) => {
     return a( {
                   onclick: ( e ) => {
                       e.preventDefault()
-                      dishView.open( dish )
+                      recipeView.open( recipe )
                   }
               },
-              dish.name
+              recipe.name
     )
 }
 
-const todayMenuItem = ( plan, dishes ) => {
-    let cookTime = dishes.map( d => d.cookTime || 0 ).reduce( ( a, b ) => a + b, 0 )
+const todayMenuItem = ( menu, recipees ) => {
+    let cookTime = recipees.map( d => d.cookTime || 0 ).reduce( ( a, b ) => a + b, 0 )
     return div( { style: {} },
                 img( { src: '/images/border.svg', style: { width: '65%', 'margin-top': '15px' } } ),
                 div( {
@@ -30,7 +30,7 @@ const todayMenuItem = ( plan, dishes ) => {
                          onmouseout() {
                              this.style.color = colors.red
                          },
-                         onclick: () => editMenu.open( plan.date ),
+                         onclick: () => editMenu.open( menu.date ),
                          style: {
                              color: colors.red,
                              'text-align': 'center',
@@ -47,15 +47,15 @@ const todayMenuItem = ( plan, dishes ) => {
                                  'justify-content': 'space-between'
                              }
                          },
-                         div( toDayName( plan.date ) ),
+                         div( toDayName( menu.date ) ),
                          div(
                              img( { src: '/images/chalk_icon.png', style: { width: '3vh', height: '3vh' } } )
                          )
                      )
                 ),
                 hr( { style: { 'max-width': '315px' } } ),
-                ...( dishes.length > 0 ?
-                     dishes.map( ( dish, i ) =>
+                ...( recipees.length > 0 ?
+                     recipees.map( ( recipe, i ) =>
                                      div( {
                                               style: {
                                                   color: colors.orange,
@@ -66,7 +66,7 @@ const todayMenuItem = ( plan, dishes ) => {
                                                   'display': 'flex'
                                               }
                                           },
-                                          dishModalLink( dish )
+                                          recipeModalLink( recipe )
                                      )
                      )
                                        : [ div( {
@@ -104,10 +104,10 @@ const todayMenuItem = ( plan, dishes ) => {
 }
 
 //TODO make collapsible
-const upcomingMenuItem = ( plan, dishes ) =>
+const upcomingMenuItem = ( menu, recipees ) =>
     div(
         div( {
-                 onclick: () => editMenu.open( plan.date ),
+                 onclick: () => editMenu.open( menu.date ),
                  onmouseover() {
                      this.style.color = colors.offWhite
                  },
@@ -130,23 +130,23 @@ const upcomingMenuItem = ( plan, dishes ) =>
                          'justify-content': 'space-between'
                      }
                  },
-                 div( toDayName( plan.date ) ),
+                 div( toDayName( menu.date ) ),
                  div(
                      img( { src: '/images/chalk_icon.png', style: { width: '2vh', height: '2vh' } } )
                  )
              )
         ),
-        ...( dishes.length > 0 ?
-             dishes.map( dish =>
+        ...( recipees.length > 0 ?
+             recipees.map( recipe =>
                              div( {
                                       style: {
                                           color: colors.darkGrey,
                                           cursor: 'pointer',
                                           'font-size': '3vh',
-                                          'text-decoration': plan.date < today().getTime() ? 'line-through' : 'none'
+                                          'text-decoration': menu.date < today().getTime() ? 'line-through' : 'none'
                                       }
                                   },
-                                  dishModalLink( dish )
+                                  recipeModalLink( recipe )
                              )
              )
                                : [
@@ -155,7 +155,7 @@ const upcomingMenuItem = ( plan, dishes ) =>
                                  color: colors.darkGrey,
                                  cursor: 'pointer',
                                  'font-size': '3vh',
-                                 'text-decoration': plan.date < today().getTime() ? 'line-through' : 'none'
+                                 'text-decoration': menu.date < today().getTime() ? 'line-through' : 'none'
                              }
                          },
                          '--' )
@@ -164,16 +164,16 @@ const upcomingMenuItem = ( plan, dishes ) =>
     )
 
 
-const menuItem = ( plan ) => {
-    let planDate = new Date( plan.date )
-    const planDishes = fnstate( [] )
-    Promise.all( plan.dishIds.map( getDishById ) )
-           .then( dishes => {
-               planDishes(dishes)
+const menuItem = ( menu ) => {
+    let menuDate = new Date( menu.date )
+    const menuRecipees = fnstate( [] )
+    Promise.all( menu.recipeIds.map( getRecipeById ) )
+           .then( recipees => {
+               menuRecipees(recipees)
            } )
 
-    let isToday = planDate.getTime() === today().getTime()
-    return isToday ? fnbind( planDishes, () => todayMenuItem( plan, planDishes() ) ) : fnbind( planDishes, () => upcomingMenuItem( plan, planDishes() ) )
+    let isToday = menuDate.getTime() === today().getTime()
+    return isToday ? fnbind( menuRecipees, () => todayMenuItem( menu, menuRecipees() ) ) : fnbind( menuRecipees, () => upcomingMenuItem( menu, menuRecipees() ) )
 }
 
 export default () => fnbind( currentWeek, () => section(

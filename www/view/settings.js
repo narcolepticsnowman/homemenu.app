@@ -62,7 +62,7 @@ let settingsPanel = div(
         }
     },
     'Shared Menus',
-    'Dishes'
+    'Recipees'
 )
 const settingsPage = div(
     {

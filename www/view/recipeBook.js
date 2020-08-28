@@ -1,3 +1,3 @@
 export default {
-    dishIds: [ 1, 2, 3, 4, 5 ]
+    recipeIds: [ 1, 2, 3, 4, 5 ]
 }
