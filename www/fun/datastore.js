@@ -2,8 +2,8 @@ import drive from './drivedb.js'
 import { fnstate } from '../lib/fntags.js'
 import { datePlusDays, today } from './constants.js'
 
-export const datastoreState = fnstate( { loaded: false } )
-export const currentWeek = fnstate( { list: [] } )
+export const datastoreLoaded = fnstate( false )
+export const currentWeek = fnstate( [] )
 
 const appFolderName = 'menu-menu.web.app_menu-data'
 const menuFolderName = 'menu-menu'
@@ -47,9 +47,9 @@ export const getMenuFolderId = async() => await getFolderId( menuFolderName, awa
 export const getAppFolderId = async() => await getFolderId( appFolderName )
 
 export const loadData = async() => {
-    if( !datastoreState.loaded ) {
-        currentWeek.list = await getMenusAround( today() )
-        datastoreState.loaded = true
+    if( !datastoreLoaded() ) {
+        currentWeek(await getMenusAround( today() ))
+        datastoreLoaded(true)
     }
 }
 
@@ -92,7 +92,7 @@ export const saveRecipe = async( recipe ) => {
 }
 
 export const saveMenu = async( menu ) => {
-    currentWeek.list = currentWeek.list.map( p => p.date === menu.date ? menu : p )
+    currentWeek(currentWeek().map( p => p.date === menu.date ? menu : p ))
 
     try {
         //TODO use the logged in users id
@@ -105,7 +105,7 @@ export const saveMenu = async( menu ) => {
         return saved
     } catch(e) {
         alert( 'Failed to save menu menu changes' )
-        currentWeek.list = currentWeek.list.map( p => p.date === menu.date ? menu : p )
+        currentWeek(currentWeek().map( p => p.date === menu.date ? menu : p ))
         throw e
     }
 }

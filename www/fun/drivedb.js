@@ -1,7 +1,7 @@
 import { script } from '../lib/fnelements.js'
 import { fnstate } from '../lib/fntags.js'
 
-export const readyState = fnstate( { ready: false } )
+export const isReady = fnstate( false )
 
 
 let initialized = false
@@ -206,7 +206,7 @@ const handleLoaded = ( clientId, apiKey ) => new Promise( resolve => gapi.load( 
                                                                                                                             discoveryDocs: [],
                                                                                                                             scope: 'https://www.googleapis.com/auth/drive'
                                                                                                                         } ).then( ( res ) => {
-    readyState.ready = true
+    isReady(true)
     resolve( res )
 } ) ) )
 

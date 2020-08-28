@@ -1,16 +1,20 @@
 import { fnstate } from '../lib/fntags.js'
 
-export const GoogleUser = fnstate( { current: {} } )
+export const GoogleUser = fnstate( {} )
 
-export const authState = fnstate( { isAuthenticated: false, isLoaded: false } )
+export const isAuthenticated = fnstate( false)
+export const authLoaded = fnstate(false)
+
+
 
 let GoogleAuth
 
 const handleLoaded = () => {
-    authState.isLoaded = true
+    authLoaded(true)
     if( GoogleAuth.isSignedIn.get() ) {
-        GoogleUser.current = GoogleAuth.currentUser.get()
-        authState.isAuthenticated = true
+        GoogleUser(GoogleAuth.currentUser.get())
+        isAuthenticated( true)
+
     }
 }
 
@@ -22,8 +26,8 @@ export const init = () => {
 export const login = ( options ) => GoogleAuth.signIn( options ).then( ( user ) => {
 
     if( user ) {
-        GoogleUser.current = user
-        authState.isAuthenticated = true
+        GoogleUser(user)
+        isAuthenticated( true)
     }
 
 } )

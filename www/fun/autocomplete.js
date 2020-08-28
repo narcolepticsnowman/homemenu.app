@@ -30,8 +30,8 @@ export default ( {
                      },
                      debounce = 600
                  } ) => {
-    let search = fnstate( { text: '' } )
-    const dataElements = fnstate( { current: [] } )
+    let search = fnstate( '' )
+    const dataElements = fnstate( [] )
     let lastTriggered = 0
     let triggered = false
     let queued = false
@@ -53,17 +53,17 @@ export default ( {
     }
     const updateSearch = ( e ) => {
         onchange( e )
-        search.text = e.target.value.toLowerCase()
+        search( e.target.value.toLowerCase() )
         if( typeof data === 'function'
             && !triggered
             && new Date().getTime() - lastTriggered > debounce
         ) {
             triggered = true
             lastTriggered = new Date().getTime()
-            buildElements( search.text )
+            buildElements( search() )
             setTimeout( () => triggered = false, debounce )
         } else if( triggered && !queued ) {
-            buildElements( search.text, true )
+            buildElements( search(), true )
             queued = true
             //this ensures changes made during the debounce period are accounted for
             setTimeout( () => {
@@ -73,50 +73,57 @@ export default ( {
         }
     }
 
-    const buildElements = ( searchText, useCached = false ) => toDataArray( data, searchText, useCached ).then( d => {
-                                                                                                                    dataElements.current = d.filter( v => v ).map(
-                                                                                                                        val => {
-                                                                                                                            if( typeof val === 'object' ) {
-                                                                                                                                if( !displayProperty ) {
-                                                                                                                                    console.trace( 'No displayProperty provided to autocomplete, but matched an object. Returning nothing.' )
-                                                                                                                                    return { record: val, str: '' }
-                                                                                                                                } else {
-                                                                                                                                    return { record: val, str: ( val[ displayProperty ] || '' ).toString() }
-                                                                                                                                }
-                                                                                                                            } else {
-                                                                                                                                return { record: val, str: val.toString() }
-                                                                                                                            }
-                                                                                                                        } )
-                                                                                                                                            .map( recordWithStringRepr => {
-                                                                                                                                                      const record = recordWithStringRepr.record
-                                                                                                                                                      if( typeof record === 'object' && ( stringMappers == null || !Array.isArray( stringMappers ) || stringMappers.length < 1 ) ) {
-                                                                                                                                                          console.trace( 'stringMappers must be an array of at least one function that returns a string given a record' )
-                                                                                                                                                      }
-                                                                                                                                                      const searchStrings =
-                                                                                                                                                          typeof record === 'object'
-                                                                                                                                                          ? stringMappers.map( mapper => ( mapper( record ) || '' ).toLowerCase() )
-                                                                                                                                                          : [ record.toString().toLowerCase() ]
-                                                                                                                                                      return {
-                                                                                                                                                          record,
-                                                                                                                                                          element: div(
-                                                                                                                                                              {
-                                                                                                                                                                  onclick: ( e ) => {
-                                                                                                                                                                      search.text = ''
-                                                                                                                                                                      dataElements.current = []
-                                                                                                                                                                      resultClickHandler( e, record )
-                                                                                                                                                                  },
-                                                                                                                                                                  style: {
-                                                                                                                                                                      'font-size': '2.5vh', color: 'black'
-                                                                                                                                                                  }
-                                                                                                                                                              },
-                                                                                                                                                              recordWithStringRepr.str
-                                                                                                                                                          ),
-                                                                                                                                                          searchStrings
-                                                                                                                                                      }
-                                                                                                                                                  }
-                                                                                                                                            )
-                                                                                                                }
-    )
+    const getValueAsString = val => {
+        if( typeof val === 'object' ) {
+            if( !displayProperty ) {
+                console.trace( 'No displayProperty provided to autocomplete, but matched an object. Returning nothing.' )
+                return { record: val, str: '' }
+            } else {
+                return { record: val, str: ( val[ displayProperty ] || '' ).toString() }
+            }
+        } else {
+            return { record: val, str: val.toString() }
+        }
+    }
+    const mapToElement = recordWithStringRepr => {
+        const record = recordWithStringRepr.record
+        if( typeof record === 'object' && ( stringMappers == null || !Array.isArray( stringMappers ) || stringMappers.length < 1 ) ) {
+            console.trace( 'stringMappers must be an array of at least one function that returns a string given a record' )
+        }
+        const searchStrings =
+            typeof record === 'object'
+            ? stringMappers.map( mapper => ( mapper( record ) || '' ).toLowerCase() )
+            : [ record.toString().toLowerCase() ]
+        return {
+            record,
+            element: div(
+                {
+                    onclick: ( e ) => {
+                        search( '' )
+                        dataElements([])
+                        resultClickHandler( e, record )
+                    },
+                    style: {
+                        'font-size': '2.5vh', color: 'black'
+                    }
+                },
+                recordWithStringRepr.str
+            ),
+            searchStrings
+        }
+    }
+
+    const buildElements = ( searchText, useCached = false ) =>
+        toDataArray( data, searchText, useCached )
+            .then(
+                d => {
+                    dataElements(
+                        d.filter( v => v )
+                         .map( getValueAsString )
+                         .map( mapToElement )
+                    )
+                }
+            )
 
 
     return div(
@@ -140,30 +147,29 @@ export default ( {
                                                              'border-radius': '3px'
                                                          }, inputStyle
                                    ),
-                                   value: search.text, onkeyup: updateSearch, onchange: updateSearch
-                               } ), ( el ) => el.value = search.text ),
+                                   value: search(), onkeyup: updateSearch, onchange: updateSearch
+                               } ), ( el ) => el.value = search() ),
         fnbind( dataElements,
-                () => dataElements.current.length > 0 && search.text.length >= 2 ? div(
+                () => dataElements().length > 0 && search().length >= 2 ? div(
                     {
                         style: {
                             position: 'absolute',
                             top: '4.7vh',
                             'background-color': colors.offWhite,
                             padding: '10px',
-                            display: search.text ? 'block' : 'none',
+                            display: search() ? 'block' : 'none',
                             'box-shadow': '-1px -1px 20px 1px #' + colors.offWhite,
                             width: '34vw',
                             'border-radius': '6px'
                         }
                     },
-                    dataElements
-                        .current
+                    dataElements()
                         .filter( d =>
-                                     d.searchStrings.filter( str => str.match( search.text ) ).length > 0
+                                     d.searchStrings.filter( str => str.match( search() ) ).length > 0
                         )
                         .map( d => d.element )
-                                                                                 )
-                                                                                 : ''
+                                                                              )
+                                                                              : ''
         )
     )
 }

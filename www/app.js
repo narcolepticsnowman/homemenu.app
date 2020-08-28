@@ -3,8 +3,8 @@ import { div, img, style } from './lib/fnelements.js'
 import MenuBoard from './view/MenuBoard.js'
 import { colors } from './fun/constants.js'
 import settings from './view/settings.js'
-import { authState, init, login } from './fun/gooooogle_sign-in.js'
-import { datastoreState, loadData } from './fun/datastore.js'
+import { isAuthenticated, init, login, authLoaded } from './fun/gooooogle_sign-in.js'
+import { datastoreLoaded, loadData } from './fun/datastore.js'
 import drive from './fun/drivedb.js'
 import loading from './view/loading.js'
 
@@ -49,16 +49,16 @@ document.head.append(
         ` )
 )
 
-observeState(authState, () => {
-    if (authState.isAuthenticated) loadData()
+observeState(isAuthenticated, () => {
+    if (isAuthenticated()) loadData()
 })
 drive.init('601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com', "AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY")
      .then(init)
 let loadingBlock = centeredBlock(loading(125));
 fnapp(document.body,
-      fnbind(authState, () =>
-          authState.isLoaded ?
-          authState.isAuthenticated ?
+      fnbind([isAuthenticated, authLoaded], () =>
+          authLoaded() ?
+          isAuthenticated() ?
           div(
               {
                   style: {
@@ -71,8 +71,8 @@ fnapp(document.body,
                       'min-height': '80vh',
                   }
               },
-              fnbind(datastoreState, () => {
-                  return datastoreState.loaded ? MenuBoard() : loadingBlock
+              fnbind( datastoreLoaded, () => {
+                  return datastoreLoaded.loaded ? MenuBoard() : loadingBlock
               }),
               settings
           )
