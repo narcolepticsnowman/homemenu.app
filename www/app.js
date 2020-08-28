@@ -1,9 +1,9 @@
-import { fnapp, fnbind, observeState } from './lib/fntags.js'
+import { fnapp, fnbind } from './lib/fntags.js'
 import { div, img, style } from './lib/fnelements.js'
 import MenuBoard from './view/MenuBoard.js'
 import { colors } from './fun/constants.js'
 import settings from './view/settings.js'
-import { isAuthenticated, init, login, authLoaded } from './fun/gooooogle_sign-in.js'
+import { authLoaded, init, isAuthenticated, login } from './fun/gooooogle_sign-in.js'
 import { datastoreLoaded, loadData } from './fun/datastore.js'
 import drive from './fun/drivedb.js'
 import loading from './view/loading.js'
@@ -49,40 +49,40 @@ document.head.append(
         ` )
 )
 
-observeState(isAuthenticated, () => {
-    if (isAuthenticated()) loadData()
-})
-drive.init('601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com', "AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY")
-     .then(init)
-let loadingBlock = centeredBlock(loading(125));
-fnapp(document.body,
-      fnbind([isAuthenticated, authLoaded], () =>
-          authLoaded() ?
-          isAuthenticated() ?
-          div(
-              {
-                  style: {
-                      margin: 'auto',
-                      display: 'flex',
-                      'flex-direction': 'column',
-                      'max-width': '650px',
-                      'text-align': 'center',
-                      'justify-content': 'center',
-                      'min-height': '80vh',
-                  }
-              },
-              fnbind( datastoreLoaded, () => {
-                  return datastoreLoaded.loaded ? MenuBoard() : loadingBlock
-              }),
-              settings
-          )
-                                    :
-          centeredBlock(
-              div({style: {'font-size': '4vh', color: colors.orange}}, "Menu Board"),
-              img({src: "/images/google_sign_in_btn.png", style: {cursor: 'pointer'}, onclick: () => login()})
-          )
+isAuthenticated.subscribe( () => {
+    if( isAuthenticated() ) loadData()
+} )
+drive.init( '601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com', 'AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY' )
+     .then( init )
+let loadingBlock = centeredBlock( loading( 125 ) )
+fnapp( document.body,
+       fnbind( [ isAuthenticated, authLoaded ], () =>
+           authLoaded() ?
+           isAuthenticated() ?
+           div(
+               {
+                   style: {
+                       margin: 'auto',
+                       display: 'flex',
+                       'flex-direction': 'column',
+                       'max-width': '650px',
+                       'text-align': 'center',
+                       'justify-content': 'center',
+                       'min-height': '80vh'
+                   }
+               },
+               fnbind( datastoreLoaded, () => {
+                   return datastoreLoaded.loaded ? MenuBoard() : loadingBlock
+               } ),
+               settings
+           )
                              :
+           centeredBlock(
+               div( { style: { 'font-size': '4vh', color: colors.orange } }, 'Menu Board' ),
+               img( { src: '/images/google_sign_in_btn.png', style: { cursor: 'pointer' }, onclick: () => login() } )
+           )
+                        :
 
-          loadingBlock
-      )
+           loadingBlock
+       )
 )
