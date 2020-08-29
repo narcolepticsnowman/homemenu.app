@@ -3,11 +3,10 @@ import { div, img, style } from './lib/fnelements.js'
 import MenuBoard from './view/MenuBoard.js'
 import { colors } from './fun/constants.js'
 import settings from './view/settings.js'
-import { authLoaded, init, isAuthenticated, login } from './fun/gooooogle_sign-in.js'
-import { datastoreLoaded, loadData } from './fun/datastore.js'
-import drive from './fun/drivedb.js'
-import loading from './view/loading.js'
+import { authLoaded, init, isAuthenticated, login } from './fun/auth.js'
+import { menusLoaded, loadData } from './fun/datastore.js'
 
+import loading from './view/loading.js'
 
 const centeredBlock = ( ...children ) => div(
     {
@@ -52,8 +51,7 @@ document.head.append(
 isAuthenticated.subscribe( () => {
     if( isAuthenticated() ) loadData()
 } )
-drive.init( '601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com', 'AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY' )
-     .then( init )
+init()
 let loadingBlock = centeredBlock( loading( 125 ) )
 fnapp( document.body,
        fnbind( [ isAuthenticated, authLoaded ], () =>
@@ -71,8 +69,8 @@ fnapp( document.body,
                        'min-height': '80vh'
                    }
                },
-               fnbind( datastoreLoaded, () => {
-                   return datastoreLoaded.loaded ? MenuBoard() : loadingBlock
+               fnbind( menusLoaded, () => {
+                   return menusLoaded() ? MenuBoard() : loadingBlock
                } ),
                settings
            )

@@ -104,7 +104,7 @@ const todayMenuItem = ( menu, recipees ) => {
 }
 
 //TODO make collapsible
-const upcomingMenuItem = ( menu, recipees ) =>
+const upcomingMenuItem = ( menu, recipes ) =>
     div(
         div( {
                  onclick: () => editMenu.open( menu.date ),
@@ -136,8 +136,8 @@ const upcomingMenuItem = ( menu, recipees ) =>
                  )
              )
         ),
-        ...( recipees.length > 0 ?
-             recipees.map( recipe =>
+        ...( recipes.length > 0 ?
+             recipes.map( recipe =>
                              div( {
                                       style: {
                                           color: colors.darkGrey,
@@ -177,5 +177,5 @@ const menuItem = ( menu ) => {
 }
 
 export default () => fnbind( currentWeek, () => section(
-    currentWeek.list.map( menuItem )
+    currentWeek().map( menuItem )
 ) )

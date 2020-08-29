@@ -1,0 +1,1 @@
+export const arrayParam = ( paramName, valuesArray)=>valuesArray.map( v=> `${encodeURIComponent(paramName)}=${encodeURIComponent(v)}`).join( "&")
