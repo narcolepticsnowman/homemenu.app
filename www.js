@@ -5,7 +5,7 @@ require( 'spliffy' )(
     {
         port: 80,
         routeDir: __dirname + '/www',
-        cacheStatic: false,
+        cacheStatic: true,
         filters: [ authFilter ],
         secure: env !== 'dev' ?
             {
