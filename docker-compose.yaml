@@ -5,7 +5,7 @@ services:
     build: .
     ports:
       - "80:80"
-    env_file:
+    env:
       - ARDB_SERVICE_HOST=ardb
   ardb:
     image: lupino/ardb-server
