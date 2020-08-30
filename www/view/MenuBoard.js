@@ -19,8 +19,8 @@ const recipeModalLink = ( recipe ) => {
     )
 }
 
-const todayMenuItem = ( menu, recipees ) => {
-    let cookTime = recipees.map( d => d.cookTime || 0 ).reduce( ( a, b ) => a + b, 0 )
+const todayMenuItem = ( menu, recipes ) => {
+    let cookTime = recipes.map( d => d.cookTime || 0 ).reduce( ( a, b ) => a + b, 0 )
     return div( { style: {} },
                 img( { src: '/images/border.svg', style: { width: '65%', 'margin-top': '15px' } } ),
                 div( {
@@ -54,8 +54,8 @@ const todayMenuItem = ( menu, recipees ) => {
                      )
                 ),
                 hr( { style: { 'max-width': '315px' } } ),
-                ...( recipees.length > 0 ?
-                     recipees.map( ( recipe, i ) =>
+                ...( recipes.length > 0 ?
+                     recipes.map( ( recipe, i ) =>
                                      div( {
                                               style: {
                                                   color: colors.orange,

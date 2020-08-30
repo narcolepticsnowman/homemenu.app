@@ -6,7 +6,6 @@ services:
     ports:
       - "80:80"
     env_file:
-      - ~/homemenu.env
       - ARDB_SERVICE_HOST=ardb
   ardb:
     image: lupino/ardb-server

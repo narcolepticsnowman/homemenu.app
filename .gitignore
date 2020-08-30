@@ -4,3 +4,4 @@
 sitedata
 build
 node_modules
+.DS_STORE
