@@ -5,13 +5,13 @@ services:
     build: .
     ports:
       - "80:80"
+    env_file:
+      - ~/.dinner-at-home.env
     environment:
       - ARDB_SERVICE_HOST=ardb
 
   ardb:
     image: lupino/ardb-server
-    env_file:
-      - ~/.dinner-at-home.env
     ports:
       - "16379:16379"
     volumes:
