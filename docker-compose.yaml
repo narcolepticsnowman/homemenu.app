@@ -11,7 +11,7 @@ services:
   ardb:
     image: lupino/ardb-server
     env_file:
-      - ~/.dinner-at-homse.env
+      - ~/.dinner-at-home.env
     ports:
       - "16379:16379"
     volumes:
