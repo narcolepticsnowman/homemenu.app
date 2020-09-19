@@ -1,6 +1,7 @@
-import { div, img, style } from '../lib/fnelements.js'
+import { button, div, img, style } from '../lib/fnelements.js'
 import { fnstate } from '../lib/fntags.js'
 import { colors } from '../fun/constants.js'
+import { logout } from '../fun/auth.js'
 
 const settingsOpen = fnstate( false )
 
@@ -62,7 +63,8 @@ let settingsPanel = div(
         }
     },
     'Shared Menus',
-    'Recipees'
+    'Recipees',
+    button({onclick:logout}, 'Logout')
 )
 const settingsPage = div(
     {

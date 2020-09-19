@@ -46,6 +46,9 @@ module.exports = {
     requiresAuthentication: passport.authenticate( 'jwt', { session: false, failureRedirect: '/' } ),
     googleAuth: passport.authenticate( 'google', { session: false, scope: [ 'profile' ], failureRedirect: '/'  } ),
     createToken(jwtInfo){
-        return jwt.sign(Object.assign(jwtInfo, { iss: process.env.APP_HOSTNAME, id: jwtInfo.sub }), jwtSecret, { expiresIn: jwtValidFor });
+        return jwt.sign(
+            Object.assign(jwtInfo, { iss: process.env.APP_HOSTNAME, id: jwtInfo.sub }),
+            jwtSecret,
+            { expiresIn: jwtValidFor, algorithm: 'HS256' });
     }
 }
