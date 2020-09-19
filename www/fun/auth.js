@@ -1,59 +1,33 @@
 import { fnstate } from '../lib/fntags.js'
-import { script } from '../lib/fnelements.js'
-
-export const GoogleUser = fnstate( {} )
+import { apiGet } from './api.js'
 
 export const isAuthenticated = fnstate( false )
-export const authLoaded = fnstate( false )
-
-export const chef = fnstate( { id: '1234' } )
-
-let GoogleAuth
-
-const clientId = '601450421542-3fmfpref2qphpet3jq4qj3a5gge28bm0.apps.googleusercontent.com'
-const apiKey = 'AIzaSyDJFL-DprA2DFg_GEzGPrMLuFLTJl0p8mY'
+export const chefLoaded = fnstate( false )
+export const chef = fnstate( null )
 
 
-const handleLoaded = () => {
-    authLoaded( true )
-    if( GoogleAuth.isSignedIn.get() ) {
-        GoogleUser( GoogleAuth.currentUser.get() )
-        isAuthenticated( true )
-    }
+if( window.location.href.match( 'authToken=' ) ) {
+    const token = window.location.href.replace( /.*authToken=([a-zA-Z0-9+/=.]+).*/, "$1" )
+    localStorage.setItem( 'auth_token', token )
+    window.location.href = window.location.href.replace( /\??authToken=.*/, '' )
 }
 
-export const init = () => {
-    if( !authLoaded() ) {
-        document.body.appendChild(
-            script(
-                {
-                    src: 'https://apis.google.com/js/api.js',
-                    onload: () => {
-                        gapi.load(
-                            'client:auth2',
-                            () => gapi.client.init(
-                                {
-                                    apiKey: apiKey,
-                                    clientId: clientId,
-                                    discoveryDocs: [],
-                                    scope: 'profile'
-                                } ).then( () => {
-                                GoogleAuth = gapi.auth2.getAuthInstance()
-                                GoogleAuth.then( handleLoaded, console.error )
-                            } )
-                        )
-                    },
-                    async: true,
-                    defer: true
-                }
-            )
-        )
-    }
+const token = localStorage.getItem( 'auth_token' )
+
+if( !token ) {
+    isAuthenticated( false )
+    chefLoaded( true )
+} else {
+    let jwtInfo = JSON.parse( atob( token.split( '.' )[ 1 ] ) )
+    apiGet( `/api/chef/${jwtInfo.sub}` )
+        .then( res => {
+            chef( res )
+            chefLoaded( true )
+            isAuthenticated( true )
+        } )
+        .finally( () => chefLoaded( true ) )
 }
 
-export const login = ( options ) => GoogleAuth.signIn( options ).then( ( user ) => {
-    if( user ) {
-        GoogleUser( user )
-        isAuthenticated( true )
-    }
-} )
+export function addAuthHeader( headers ) {return Object.assign( { authorization: 'Bearer ' + token }, headers )}
+
+export const login = () => window.location.href = '/api/auth/google'

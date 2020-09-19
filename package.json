@@ -8,10 +8,14 @@
     "terser": "4.3.9"
   },
   "dependencies": {
-    "redish": "0.0.7",
-    "redis": "3.0.2",
     "js-schema": "1.0.1",
-    "spliffy": "4.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "passport": "^0.4.1",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-jwt": "^4.0.0",
+    "redis": "3.0.2",
+    "redish": "0.0.7",
+    "spliffy": "4.6.13"
   },
   "scripts": {
     "start:dev": "node devserver.js",

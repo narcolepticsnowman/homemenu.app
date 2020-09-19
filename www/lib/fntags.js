@@ -71,7 +71,7 @@ export const fnbind = function( state, element, update ) {
 /**
  * Create a state object that can be bound to.
  * @param initialState The initial state
- * @returns function A function that can be used to get and set the state
+ * @returns function A function that can be used to apiGet and set the state
  */
 export const fnstate = ( initialState ) => {
     let currentState = initialState
@@ -130,7 +130,7 @@ export const fnstate = ( initialState ) => {
                         if( elId !== childId ) {
                             let tmp = currentChild
                             currentChild = currentChild.nextSibling
-                            //create a placeholder so the sibling iteration doesn't get disrupted when this element gets detached
+                            //create a placeholder so the sibling iteration doesn't apiGet disrupted when this element gets detached
                             element.replaceWith( document.createTextNode( '' ) )
                             tmp.replaceWith( element )
                         } else {

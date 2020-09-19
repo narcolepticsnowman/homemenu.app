@@ -3,7 +3,7 @@ import { div, img, style } from './lib/fnelements.js'
 import MenuBoard from './view/MenuBoard.js'
 import { colors } from './fun/constants.js'
 import settings from './view/settings.js'
-import { authLoaded, init, isAuthenticated, login } from './fun/auth.js'
+import { chefLoaded, isAuthenticated, login } from './fun/auth.js'
 import { menusLoaded, loadData } from './fun/datastore.js'
 
 import loading from './view/loading.js'
@@ -49,13 +49,13 @@ document.head.append(
 )
 
 isAuthenticated.subscribe( () => {
-    if( isAuthenticated() ) loadData()
+    if( isAuthenticated() && chefLoaded() ) loadData()
 } )
-init()
+
 let loadingBlock = centeredBlock( loading( 125 ) )
 fnapp( document.body,
-       fnbind( [ isAuthenticated, authLoaded ], () =>
-           authLoaded() ?
+       fnbind( [ isAuthenticated, chefLoaded ], () =>
+           chefLoaded() ?
            isAuthenticated() ?
            div(
                {

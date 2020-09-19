@@ -1,7 +1,7 @@
 import { fnstate } from '../lib/fntags.js'
 import { datePlusDays, today } from './constants.js'
 import { arrayParam } from './toParam.js'
-import { chefPath, get, post } from './api.js'
+import { chefPath, apiGet, apiPost } from './api.js'
 
 export const menusLoaded = fnstate( false )
 export const currentWeek = fnstate( [] )
@@ -17,7 +17,7 @@ const getMenusAround = async( date ) => {
     startDate.setDate( startDate.getDate() - 3 )
 
     let dates = [ ...new Array( 7 ).keys() ].map( i => datePlusDays( startDate, i ) )
-    return (await get( chefPath( `/menu?${arrayParam('date', dates )}` ) )).map((menu, i)=>menu||newMenu(dates[i]))
+    return (await apiGet( chefPath( `/menu?${arrayParam( 'date', dates )}` ) )).map( ( menu, i)=> menu || newMenu( dates[i]))
 }
 
 export const loadData = async() => {
@@ -27,14 +27,14 @@ export const loadData = async() => {
     }
 }
 
-export const getRecipeById = async( recipeId ) => await get( chefPath( `/recipe/${recipeId}` ) )
+export const getRecipeById = async( recipeId ) => await apiGet( chefPath( `/recipe/${recipeId}` ) )
 
-export const getMenu = async( msDate ) => await (get( chefPath( `/menu/${msDate}` ) )) || newMenu(msDate)
+export const getMenu = async( msDate ) => await (apiGet( chefPath( `/menu/${msDate}` ) )) || newMenu( msDate)
 
-export const saveRecipe = async( recipe ) => await post( chefPath( `/recipe` ), recipe )
+export const saveRecipe = async( recipe ) => await apiPost( chefPath( `/recipe` ), recipe )
 
 export const saveMenu = async( menu ) => {
-    let saved = await post( chefPath( '/menu' ), menu )
+    let saved = await apiPost( chefPath( '/menu' ), menu )
     currentWeek( currentWeek().map( p => p.date === saved.date ? saved : p ) )
     return saved
 }

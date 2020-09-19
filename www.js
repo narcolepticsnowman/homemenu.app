@@ -1,12 +1,21 @@
 #!/usr/bin/env node
+const fs = require( 'fs' )
+let envFile = require( 'os' ).homedir() + '/.dinner-at-home.env'
+if( fs.existsSync( envFile ) ) {
+    const appEnv = require( envFile )
+    Object.assign( process.env, appEnv )
+}
+
+
 env = process.env.DEPLOY_MODE || 'dev'
-const authFilter = require( './filters/google_oauth.js' )
+const auth = require( './apiAuth.js' )
 require( 'spliffy' )(
     {
         port: 80,
         routeDir: __dirname + '/www',
-        cacheStatic: true,
-        filters: [ authFilter ],
+        // cacheStatic: true,
+        middleware: [ auth.init() ],
+        decodeQueryParameters: true,
         secure: env !== 'dev' ?
             {
                 port: 443,
