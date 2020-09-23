@@ -39,6 +39,5 @@ export const saveMenu = async( menu ) => {
     return saved
 }
 
-//TODO implement autocomplete
-//https://redislabs.com/ebook/part-2-core-concepts/chapter-6-application-components-in-redis/6-1-autocomplete/6-1-2-address-book-autocomplete/
-export const getRecipeNameIndex = async() => []
+
+export const getRecipeIndex = async() => {}

@@ -2,7 +2,7 @@ import Modal from './Modal.js'
 import { div, form, hr, img, input, span } from '../lib/fnelements.js'
 import { fnbind, fnstate } from '../lib/fntags.js'
 import { colors, toDayName, toMonthDay } from '../fun/constants.js'
-import { currentWeek, getMenu, getRecipeById, getRecipeNameIndex, saveMenu, saveRecipe } from '../fun/datastore.js'
+import { currentWeek, getMenu, getRecipeById, getRecipeIndex, saveMenu, saveRecipe } from '../fun/datastore.js'
 import autocomplete from '../fun/autocomplete.js'
 
 
@@ -188,7 +188,7 @@ const EditMenu = Modal( {
                                                                       'text-align': 'center'
                                                                   },
                                                                   data: async() => {
-                                                                      let index = ( await getRecipeNameIndex() ).index
+                                                                      let index = ( await getRecipeIndex() ).index
                                                                       return [ ...Object.keys( index ) ].map( id => ( { id, name: index[ id ] } ) )
                                                                   },
                                                                   displayProperty: 'name',

@@ -13,6 +13,7 @@ export async function request ( path, method, body, headers ) {
             if( ( res.status / 100 >> 0 ) !== 2 ) {
                 if( res.status === 401 ) {
                     isAuthenticated( false )
+                    throw new Error("Not Authorized")
                 }
                 console.error( 'Non-OK request: ', res.statusText )
                 let err = new Error( `Non-OK request(${res.status}) : ${res.statusText}` )
@@ -25,7 +26,10 @@ export async function request ( path, method, body, headers ) {
             }
             return res.json()
         } )
-        .catch( err => {if( err.status >= 500 ) showError( 'Something Broke...', err )} )
+        .catch( err => {
+            if( err.status >= 500 ) showError( 'Something Broke...', err )
+            throw err
+        } )
 }
 
 export const chefPath = ( path ) => `/api/chef/${chef().id}${ensureSlash( path )}`

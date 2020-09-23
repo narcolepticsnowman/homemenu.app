@@ -36,9 +36,9 @@ const checkMsDate = ( date ) => {
     else return date
 }
 const menuId = ( chefId, msDate ) => 'chef-' + checkChefId( chefId ) + '-menu-' + checkMsDate( msDate )
-const menuKey = ( chefId ) => 'menu-' + checkChefId( chefId )
-const recipeKey = ( chefId ) => 'recipe-' + checkChefId( chefId )
-const recipeKeywordsKey = ( chefId ) => 'recipeKeywords-' + checkChefId( chefId )
+const menuCollection = ( chefId ) => 'menu-' + checkChefId( chefId )
+const recipeCollection = ( chefId ) => ({collectionKey: 'recipe-' + checkChefId( chefId )})
+const recipeNamesIndexKey = ( chefId ) => 'recipeIndex:name-' + checkChefId( chefId )
 
 const handleNotFound = (obj)=>{
     if(!obj) throw {statusCode: 404, statusMessage: 'Not Found'}
@@ -51,7 +51,7 @@ module.exports = {
     getMenu: async( chefId, date ) => handleNotFound(await db.findOneById( menuId( chefId, date ) )),
     getMenus:
         async( chefId, page, size ) =>
-            await db.findAll( menuKey( chefId ), page, size ) ,
+            await db.findAll( menuCollection( chefId ), page, size ) ,
     getMenusByDate:
         async( chefId, dates ) =>
             await Promise.all(
@@ -63,23 +63,24 @@ module.exports = {
             await db.save(
                 ensureMenuValid( menu ),
                 {
-                    collectionKey: menuKey( chefId ),
+                    collectionKey: menuCollection( chefId ),
                     idGenerator: ( obj ) => menuId( chefId, obj.date )
                 }
             ),
     getRecipes:
         async( chefId, page, size ) =>
-            await db.findAll( recipeKey( chefId ), page, size ),
+            await db.findAll( recipeCollection( chefId ), page, size ),
     getRecipe:
         async( recipeId ) =>
             handleNotFound(await db.findOneById( checkRecipeId( recipeId ) )),
-    getChef:
-        async( chefId ) =>
-            handleNotFound(await db.findOneById( checkChefId( chefId ) )),
     saveRecipe:
         async( chefId, recipe ) => {
             //TODO implement saving keywords to a set to enable search and autocomplete
             //await db.save( extractKeywords( recipe ), recipeKeywordsKey( chefId ) )
-            return await db.save( ensureRecipeValid( recipe ), recipeKey( chefId ) )
-        }
+            const res = await db.save( ensureRecipeValid( recipe ), recipeCollection( chefId ) )
+            await db.save()
+        },
+    getRecipeIndices:
+        async(chefId) =>
+            await db.findOneById(recipeNamesIndexKey(chefId))
 }

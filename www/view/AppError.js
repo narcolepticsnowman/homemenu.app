@@ -3,8 +3,8 @@ import { div } from '../lib/fnelements.js'
 
 /**
  * Show an application error on the page
- * @param errorTitle string or htlm element
- * @param errorBody string or htlm element
+ * @param errorTitle string or html element
+ * @param errorBody string or html element
  */
 
 export default function showError( errorTitle, errorBody ) {

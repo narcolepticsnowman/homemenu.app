@@ -34,7 +34,10 @@ passport.use(
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
             callbackURL: '/api/auth/google/callback'
         },
-        ( accessToken, refreshToken, profile, cb ) => cb( null, profile )
+        ( accessToken, refreshToken, profile, cb ) => {
+            profile.id = "google:"+profile.id
+            return cb( null, profile )
+        }
     )
 )
 
@@ -43,8 +46,8 @@ module.exports = {
     init() {
         return passport.initialize()
     },
-    requiresAuthentication: passport.authenticate( 'jwt', { session: false, failureRedirect: '/' } ),
-    googleAuth: passport.authenticate( 'google', { session: false, scope: [ 'profile' ], failureRedirect: '/'  } ),
+    requiresAuthentication: passport.authenticate( 'jwt', { session: false } ),
+    googleAuth: passport.authenticate( 'google', { session: false, scope: [ 'profile' ], failureRedirect: '/?authFailed=true'  } ),
     createToken(jwtInfo){
         return jwt.sign(
             Object.assign(jwtInfo, { iss: process.env.APP_HOSTNAME, id: jwtInfo.sub }),
