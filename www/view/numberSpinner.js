@@ -1,6 +1,6 @@
 import { div } from '../lib/fnelements.js'
 import { colors, fixRange } from '../fun/constants.js'
-import { fnbind, fnstate } from '../lib/fntags.js'
+import { fnstate } from '../lib/fntags.js'
 
 export default ( input ) => {
     const valueState = fnstate( input.value && parseInt( input.value ) || 0 )
@@ -20,7 +20,7 @@ export default ( input ) => {
                 display: 'inline-flex'
             }
         },
-        fnbind( valueState, input, () => input.value = valueState() ),
+        valueState.bindAs( input, () => input.value = valueState() ),
         div( {
                  style: {
                      display: 'flex',

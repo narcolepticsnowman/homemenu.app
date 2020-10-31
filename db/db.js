@@ -38,7 +38,7 @@ const checkMsDate = ( date ) => {
 const menuId = ( chefId, msDate ) => 'chef-' + checkChefId( chefId ) + '-menu-' + checkMsDate( msDate )
 const menuCollection = ( chefId ) => 'menu-' + checkChefId( chefId )
 const recipeCollection = ( chefId ) => ({collectionKey: 'recipe-' + checkChefId( chefId )})
-const recipeNamesIndexKey = ( chefId ) => 'recipeIndex:name-' + checkChefId( chefId )
+const recipeIndexKey = ( chefId ) => 'recipeIndex-' + checkChefId( chefId )
 
 const handleNotFound = (obj)=>{
     if(!obj) throw {statusCode: 404, statusMessage: 'Not Found'}
@@ -80,7 +80,7 @@ module.exports = {
             const res = await db.save( ensureRecipeValid( recipe ), recipeCollection( chefId ) )
             await db.save()
         },
-    getRecipeIndices:
+    getRecipeIndex:
         async(chefId) =>
-            await db.findOneById(recipeNamesIndexKey(chefId))
+            await db.findOneById(recipeIndexKey(chefId))
 }

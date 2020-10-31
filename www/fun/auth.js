@@ -1,5 +1,8 @@
 import { fnstate } from '../lib/fntags.js'
 import { apiGet } from './api.js'
+import { div, img } from '../lib/fnelements.js'
+import { colors } from './constants.js'
+import { centeredBlock } from '../view/component/centeredBlock.js'
 
 export const isAuthenticated = fnstate( false )
 export const chefLoaded = fnstate( false )
@@ -35,4 +38,11 @@ export const login = () => window.location.href = '/api/auth/google'
 export const logout = () => {
     localStorage.removeItem( tokenKey )
     window.location.href = '/'
+}
+
+export const loginForm = function() {
+    return centeredBlock(
+        div( { style: { 'font-size': '4vh', color: colors.orange } }, 'Menu Board' ),
+        img( { src: '/images/google_sign_in_btn.png', style: { cursor: 'pointer' }, onclick: () => login() } )
+    )
 }

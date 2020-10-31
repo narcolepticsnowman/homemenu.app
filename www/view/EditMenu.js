@@ -1,6 +1,6 @@
 import Modal from './Modal.js'
 import { div, form, hr, img, input, span } from '../lib/fnelements.js'
-import { fnbind, fnstate } from '../lib/fntags.js'
+import { fnstate } from '../lib/fntags.js'
 import { colors, toDayName, toMonthDay } from '../fun/constants.js'
 import { currentWeek, getMenu, getRecipeById, getRecipeIndex, saveMenu, saveRecipe } from '../fun/datastore.js'
 import autocomplete from '../fun/autocomplete.js'
@@ -135,7 +135,7 @@ const EditMenu = Modal( {
                                                                   .then( recipes => {
                                                                       menuRecipes( recipes )
                                                                   } )
-                                return fnbind( menu, () => div(
+                                return menu.bindAs( () => div(
                                     form(
                                         {
                                             onsubmit: ( e ) => e.preventDefault()
@@ -163,7 +163,7 @@ const EditMenu = Modal( {
                                              img( { src: '/images/border.svg', style: { width: '70%' } } )
                                         ),
                                         div(
-                                            fnbind( menuRecipes, () => div(
+                                            menuRecipes.bindAs( () => div(
                                                 menuRecipes().map( ( recipe, i ) =>
                                                                        recipe.id
                                                                        ? existingRecipe( recipe, i )

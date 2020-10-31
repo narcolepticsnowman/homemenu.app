@@ -4,7 +4,7 @@ import { colors, humanTime, today, toDayName } from '../fun/constants.js'
 import { currentWeek, getRecipeById } from '../fun/datastore.js'
 
 import EditMenu from './EditMenu.js'
-import { fnbind, fnstate } from '../lib/fntags.js'
+import { fnstate } from '../lib/fntags.js'
 
 const recipeView = RecipeView
 const editMenu = EditMenu
@@ -20,7 +20,7 @@ const recipeModalLink = ( recipe ) => {
 }
 
 const todayMenuItem = ( menu, recipes ) => {
-    let cookTime = recipes.map( d => d.cookTime || 0 ).reduce( ( a, b ) => a + b, 0 )
+    let cookTime = recipes().map( d => d.cookTime || 0 ).reduce( ( a, b ) => a + b, 0 )
     return div( { style: {} },
                 img( { src: '/images/border.svg', style: { width: '65%', 'margin-top': '15px' } } ),
                 div( {
@@ -54,33 +54,20 @@ const todayMenuItem = ( menu, recipes ) => {
                      )
                 ),
                 hr( { style: { 'max-width': '315px' } } ),
-                ...( recipes.length > 0 ?
-                     recipes.map( ( recipe, i ) =>
-                                     div( {
-                                              style: {
-                                                  color: colors.orange,
-                                                  cursor: 'pointer',
-                                                  'font-size': '5.5vh',
-                                                  'align-items': 'center',
-                                                  'flex-direction': 'column',
-                                                  'display': 'flex'
-                                              }
-                                          },
-                                          recipeModalLink( recipe )
-                                     )
+                div( {
+                         style: {
+                             color: colors.orange,
+                             cursor: 'pointer',
+                             'font-size': '5.5vh',
+                             'align-items': 'center',
+                             'flex-direction': 'column',
+                             'display': 'flex'
+                         }
+                     },
+                     recipes.bindAs( r =>
+                                         r.length > 0 ?
+                                         r.map( recipe => recipeModalLink( recipe ) ) : '--'
                      )
-                                       : [ div( {
-                                                    style: {
-                                                        color: colors.orange,
-                                                        cursor: 'pointer',
-                                                        'font-size': '5.5vh',
-                                                        'align-items': 'center',
-                                                        'flex-direction': 'column',
-                                                        'display': 'flex'
-                                                    }
-                                                },
-                                                '--'
-                        ) ]
                 ),
                 cookTime > 0 ? div(
                     {
@@ -137,19 +124,19 @@ const upcomingMenuItem = ( menu, recipes ) =>
              )
         ),
         ...( recipes.length > 0 ?
-             recipes.map( recipe =>
-                             div( {
-                                      style: {
-                                          color: colors.darkGrey,
-                                          cursor: 'pointer',
-                                          'font-size': '3vh',
-                                          'text-decoration': menu.date < today().getTime() ? 'line-through' : 'none'
-                                      }
-                                  },
-                                  recipeModalLink( recipe )
-                             )
+             recipes().map( recipe =>
+                                div( {
+                                         style: {
+                                             color: colors.darkGrey,
+                                             cursor: 'pointer',
+                                             'font-size': '3vh',
+                                             'text-decoration': menu.date < today().getTime() ? 'line-through' : 'none'
+                                         }
+                                     },
+                                     recipeModalLink( recipe() )
+                                )
              )
-                               : [
+                                : [
                     div( {
                              style: {
                                  color: colors.darkGrey,
@@ -165,17 +152,16 @@ const upcomingMenuItem = ( menu, recipes ) =>
 
 
 const menuItem = ( menu ) => {
-    let menuDate = new Date( menu.date )
+    if( !menu() ) {
+        return '--'
+    }
+    let menuDate = new Date( menu().date )
     const menuRecipees = fnstate( [] )
-    Promise.all( menu.recipeIds.map( getRecipeById ) )
-           .then( recipees => {
-               menuRecipees(recipees)
-           } )
+    Promise.all( menu().recipeIds.map( getRecipeById ) )
+           .then( recipees => menuRecipees( recipees ) )
 
     let isToday = menuDate.getTime() === today().getTime()
-    return isToday ? fnbind( menuRecipees, () => todayMenuItem( menu, menuRecipees() ) ) : fnbind( menuRecipees, () => upcomingMenuItem( menu, menuRecipees() ) )
+    return isToday ? todayMenuItem( menu(), menuRecipees ) : upcomingMenuItem( menu(), menuRecipees )
 }
 
-export default () => fnbind( currentWeek, () => section(
-    currentWeek().map( menuItem )
-) )
+export default () => currentWeek.bindValues( section(), menuItem )

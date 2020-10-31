@@ -1,5 +1,5 @@
 import { div, input, object } from '../lib/fnelements.js'
-import { fnbind, fnstate } from '../lib/fntags.js'
+import { fnstate } from '../lib/fntags.js'
 import { colors } from './constants.js'
 
 
@@ -137,7 +137,7 @@ export default ( {
                                   style
             )
         },
-        fnbind( search, input( {
+        search.bindAs(input( {
                                    type: 'text', placeholder,
                                    style: Object.assign( {
                                                              height: '4vh',
@@ -149,7 +149,7 @@ export default ( {
                                    ),
                                    value: search(), onkeyup: updateSearch, onchange: updateSearch
                                } ), ( el ) => el.value = search() ),
-        fnbind( dataElements,
+        dataElements.bindAs(
                 () => dataElements().length > 0 && search().length >= 2 ? div(
                     {
                         style: {

@@ -15,7 +15,7 @@
     "passport-jwt": "^4.0.0",
     "redis": "3.0.2",
     "redish": "0.0.7",
-    "spliffy": "4.6.13"
+    "spliffy": "4.7.7"
   },
   "scripts": {
     "start:dev": "node devserver.js",
