@@ -13,7 +13,7 @@
     "passport": "^0.4.1",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.0",
-    "redis": "3.0.2",
+    "redis": "3.1.1",
     "redish": "0.0.7",
     "spliffy": "4.7.7"
   },
